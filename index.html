@@ -3,53 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catalog-Driven Agent Demo — Transcripts</title>
+    <title>Catalog-Driven Agent Demo — Transcript Timeline</title>
     <style>
-        :root { --bg: #f5f5f5; --card: #fff; --accent: #1976d2; --text: #212121; --muted: #757575; }
+        :root { --bg: #f5f5f5; --card: #fff; --accent: #1976d2; --text: #212121; --muted: #757575; --green: #2e7d32; --orange: #ef6c00; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 24px; line-height: 1.6; }
         .container { max-width: 720px; margin: 0 auto; }
         h1 { font-size: 1.5rem; border-bottom: 2px solid var(--accent); padding-bottom: 8px; }
-        .phase { background: var(--card); border-radius: 12px; padding: 20px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .phase h2 { margin: 0 0 8px; font-size: 1.1rem; }
-        .phase p { margin: 0 0 12px; color: var(--muted); font-size: 0.9rem; }
-        a { color: var(--accent); text-decoration: none; font-weight: 600; }
+        .intro { font-size: 0.9rem; color: var(--muted); margin-bottom: 32px; }
+        .run { margin-bottom: 32px; }
+        .run-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+        .run-date { font-size: 1.2rem; font-weight: 700; }
+        .run-label { font-size: 0.85rem; color: var(--muted); }
+        .phases { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+        .phase { background: var(--card); border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-left: 3px solid var(--green); }
+        .phase.skipped { opacity: 0.45; border-left-color: var(--orange); }
+        .phase h3 { margin: 0 0 4px; font-size: 0.95rem; }
+        .phase p { margin: 0; font-size: 0.8rem; color: var(--muted); }
+        a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.85rem; }
         a:hover { text-decoration: underline; }
-        .meta { font-size: 0.85rem; color: var(--muted); margin-bottom: 24px; }
-        .skipped { opacity: 0.5; border-left: 3px solid #ff9800; }
+        .timeline { border-left: 2px solid #ddd; padding-left: 24px; margin-left: 8px; }
+        .timeline .run { position: relative; }
+        .timeline .run::before { content: ''; position: absolute; left: -30px; top: 6px; width: 12px; height: 12px; background: var(--accent); border-radius: 50%; border: 2px solid var(--bg); }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Catalog-Driven Agent Demo</h1>
-    <p class="meta">An AI coding agent queries a live Backstage catalog before writing code.<br>
-    RHDH instance with Parasol Insurance catalog (~276 entities). Captured 2026-06-04.</p>
+    <p class="intro">
+        An AI coding agent queries a live Backstage catalog <em>before</em> writing code.
+        Each run captures the agent's reasoning against the
+        <a href="https://github.com/rhdh-parasol">Parasol Insurance</a> catalog on RHDH.
+        Newer runs appear at the top.
+    </p>
 
-    <div class="phase">
-        <h2>Phase 1: Discover</h2>
-        <p>Map the organizational landscape — domains, systems, components. Find where the new payment reconciliation service belongs.</p>
-        <a href="phase1-discover/">View transcript &rarr;</a>
-    </div>
+    <div class="timeline">
 
-    <div class="phase skipped">
-        <h2>Phase 2: Learn (not yet captured)</h2>
-        <p>Read TechDocs domain handbooks. Discover the IBM MQ mandate and Kafka prohibition on payment paths (PCI-DSS). Requires techdocs-mcp-extras plugin.</p>
-    </div>
+        <div class="run">
+            <div class="run-header">
+                <span class="run-date">2026-06-04</span>
+                <span class="run-label">First capture — phases 1, 3, 4 (TechDocs + scaffold exec deferred)</span>
+            </div>
+            <div class="phases">
+                <div class="phase">
+                    <h3>1. Discover</h3>
+                    <p>14 domains &rarr; Claims &rarr; claims-payment-system &rarr; 5 components</p>
+                    <a href="2026-06-04/phase1-discover/">Transcript &rarr;</a>
+                </div>
+                <div class="phase skipped">
+                    <h3>2. Learn</h3>
+                    <p>TechDocs handbooks &mdash; IBM MQ mandate, Kafka forbidden (needs plugin)</p>
+                </div>
+                <div class="phase">
+                    <h3>3. Reuse</h3>
+                    <p>4 API integration points, 2 upstream services mapped</p>
+                    <a href="2026-06-04/phase3-reuse/">Transcript &rarr;</a>
+                </div>
+                <div class="phase">
+                    <h3>4. Scaffold</h3>
+                    <p>3 templates evaluated &rarr; Quarkus selected (only valid choice)</p>
+                    <a href="2026-06-04/phase4-scaffold/">Transcript &rarr;</a>
+                </div>
+                <div class="phase skipped">
+                    <h3>5. Verify</h3>
+                    <p>Catalog registration check (needs template execution)</p>
+                </div>
+            </div>
+        </div>
 
-    <div class="phase">
-        <h2>Phase 3: Reuse</h2>
-        <p>Identify existing services and APIs to integrate with — settlement, disbursement, audit log, fraud scoring — rather than rebuild.</p>
-        <a href="phase3-reuse/">View transcript &rarr;</a>
-    </div>
+        <!-- Next run: copy the .run block above, update date and paths -->
 
-    <div class="phase">
-        <h2>Phase 4: Scaffold</h2>
-        <p>Evaluate three software templates (Quarkus, Python, Node.js) and select the only valid one for a Claims domain transactional service.</p>
-        <a href="phase4-scaffold/">View transcript &rarr;</a>
-    </div>
-
-    <div class="phase skipped">
-        <h2>Phase 5: Verify (not yet captured)</h2>
-        <p>Confirm the scaffolded service is registered in the catalog with correct ownership and dependencies. Requires template execution.</p>
     </div>
 </div>
 </body>

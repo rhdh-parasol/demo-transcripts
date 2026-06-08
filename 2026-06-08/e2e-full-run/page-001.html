@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code transcript - page 1</title>
+    <style>
+:root { --bg-color: #f5f5f5; --card-bg: #ffffff; --user-bg: #e3f2fd; --user-border: #1976d2; --assistant-bg: #f5f5f5; --assistant-border: #9e9e9e; --thinking-bg: #fff8e1; --thinking-border: #ffc107; --thinking-text: #666; --tool-bg: #f3e5f5; --tool-border: #9c27b0; --tool-result-bg: #e8f5e9; --tool-error-bg: #ffebee; --text-color: #212121; --text-muted: #757575; --code-bg: #263238; --code-text: #aed581; }
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 16px; line-height: 1.6; }
+.container { max-width: 800px; margin: 0 auto; }
+h1 { font-size: 1.5rem; margin-bottom: 24px; padding-bottom: 8px; border-bottom: 2px solid var(--user-border); }
+.header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid var(--user-border); padding-bottom: 8px; margin-bottom: 24px; }
+.header-row h1 { border-bottom: none; padding-bottom: 0; margin-bottom: 0; flex: 1; min-width: 200px; }
+.message { margin-bottom: 16px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.message.user { background: var(--user-bg); border-left: 4px solid var(--user-border); }
+.message.assistant { background: var(--card-bg); border-left: 4px solid var(--assistant-border); }
+.message.tool-reply { background: #fff8e1; border-left: 4px solid #ff9800; }
+.tool-reply .role-label { color: #e65100; }
+.tool-reply .tool-result { background: transparent; padding: 0; margin: 0; }
+.tool-reply .tool-result .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #fff8e1); }
+.message-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; background: rgba(0,0,0,0.03); font-size: 0.85rem; }
+.role-label { font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.user .role-label { color: var(--user-border); }
+time { color: var(--text-muted); font-size: 0.8rem; }
+.timestamp-link { color: inherit; text-decoration: none; }
+.timestamp-link:hover { text-decoration: underline; }
+.message:target { animation: highlight 2s ease-out; }
+@keyframes highlight { 0% { background-color: rgba(25, 118, 210, 0.2); } 100% { background-color: transparent; } }
+.message-content { padding: 16px; }
+.message-content p { margin: 0 0 12px 0; }
+.message-content p:last-child { margin-bottom: 0; }
+.thinking { background: var(--thinking-bg); border: 1px solid var(--thinking-border); border-radius: 8px; padding: 12px; margin: 12px 0; font-size: 0.9rem; color: var(--thinking-text); }
+.thinking-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #f57c00; margin-bottom: 8px; }
+.thinking p { margin: 8px 0; }
+.assistant-text { margin: 8px 0; }
+.tool-use { background: var(--tool-bg); border: 1px solid var(--tool-border); border-radius: 8px; padding: 12px; margin: 12px 0; }
+.tool-header { font-weight: 600; color: var(--tool-border); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.tool-icon { font-size: 1.1rem; }
+.tool-description { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px; font-style: italic; }
+.tool-result { background: var(--tool-result-bg); border-radius: 8px; padding: 12px; margin: 12px 0; }
+.tool-result.tool-error { background: var(--tool-error-bg); }
+.file-tool { border-radius: 8px; padding: 12px; margin: 12px 0; }
+.write-tool { background: linear-gradient(135deg, #e3f2fd 0%, #e8f5e9 100%); border: 1px solid #4caf50; }
+.edit-tool { background: linear-gradient(135deg, #fff3e0 0%, #fce4ec 100%); border: 1px solid #ff9800; }
+.file-tool-header { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+.write-header { color: #2e7d32; }
+.edit-header { color: #e65100; }
+.file-tool-icon { font-size: 1rem; }
+.file-tool-path { font-family: monospace; background: rgba(0,0,0,0.08); padding: 2px 8px; border-radius: 4px; }
+.file-tool-fullpath { font-family: monospace; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; word-break: break-all; }
+.file-content { margin: 0; }
+.edit-section { display: flex; margin: 4px 0; border-radius: 4px; overflow: hidden; }
+.edit-label { padding: 8px 12px; font-weight: bold; font-family: monospace; display: flex; align-items: flex-start; }
+.edit-old { background: #fce4ec; }
+.edit-old .edit-label { color: #b71c1c; background: #f8bbd9; }
+.edit-old .edit-content { color: #880e4f; }
+.edit-new { background: #e8f5e9; }
+.edit-new .edit-label { color: #1b5e20; background: #a5d6a7; }
+.edit-new .edit-content { color: #1b5e20; }
+.edit-content { margin: 0; flex: 1; background: transparent; font-size: 0.85rem; }
+.edit-replace-all { font-size: 0.75rem; font-weight: normal; color: var(--text-muted); }
+.write-tool .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #e6f4ea); }
+.edit-tool .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #fff0e5); }
+.todo-list { background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%); border: 1px solid #81c784; border-radius: 8px; padding: 12px; margin: 12px 0; }
+.todo-header { font-weight: 600; color: #2e7d32; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+.todo-items { list-style: none; margin: 0; padding: 0; }
+.todo-item { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.06); font-size: 0.9rem; }
+.todo-item:last-child { border-bottom: none; }
+.todo-icon { flex-shrink: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 50%; }
+.todo-completed .todo-icon { color: #2e7d32; background: rgba(46, 125, 50, 0.15); }
+.todo-completed .todo-content { color: #558b2f; text-decoration: line-through; }
+.todo-in-progress .todo-icon { color: #f57c00; background: rgba(245, 124, 0, 0.15); }
+.todo-in-progress .todo-content { color: #e65100; font-weight: 500; }
+.todo-pending .todo-icon { color: #757575; background: rgba(0,0,0,0.05); }
+.todo-pending .todo-content { color: #616161; }
+pre { background: var(--code-bg); color: var(--code-text); padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; margin: 8px 0; white-space: pre-wrap; word-wrap: break-word; }
+pre.json { color: #e0e0e0; }
+code { background: rgba(0,0,0,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+pre code { background: none; padding: 0; }
+.user-content { margin: 0; }
+.truncatable { position: relative; }
+.truncatable.truncated .truncatable-content { max-height: 200px; overflow: hidden; }
+.truncatable.truncated::after { content: ''; position: absolute; bottom: 32px; left: 0; right: 0; height: 60px; background: linear-gradient(to bottom, transparent, var(--card-bg)); pointer-events: none; }
+.message.user .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--user-bg)); }
+.message.tool-reply .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #fff8e1); }
+.tool-use .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--tool-bg)); }
+.tool-result .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--tool-result-bg)); }
+.expand-btn { display: none; width: 100%; padding: 8px 16px; margin-top: 4px; background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); border-radius: 6px; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); }
+.expand-btn:hover { background: rgba(0,0,0,0.1); }
+.truncatable.truncated .expand-btn, .truncatable.expanded .expand-btn { display: block; }
+.pagination { display: flex; justify-content: center; gap: 8px; margin: 24px 0; flex-wrap: wrap; }
+.pagination a, .pagination span { padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; }
+.pagination a { background: var(--card-bg); color: var(--user-border); border: 1px solid var(--user-border); }
+.pagination a:hover { background: var(--user-bg); }
+.pagination .current { background: var(--user-border); color: white; }
+.pagination .disabled { color: var(--text-muted); border: 1px solid #ddd; }
+.pagination .index-link { background: var(--user-border); color: white; }
+details.continuation { margin-bottom: 16px; }
+details.continuation summary { cursor: pointer; padding: 12px 16px; background: var(--user-bg); border-left: 4px solid var(--user-border); border-radius: 12px; font-weight: 500; color: var(--text-muted); }
+details.continuation summary:hover { background: rgba(25, 118, 210, 0.15); }
+details.continuation[open] summary { border-radius: 12px 12px 0 0; margin-bottom: 0; }
+.index-item { margin-bottom: 16px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background: var(--user-bg); border-left: 4px solid var(--user-border); }
+.index-item a { display: block; text-decoration: none; color: inherit; }
+.index-item a:hover { background: rgba(25, 118, 210, 0.1); }
+.index-item-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; background: rgba(0,0,0,0.03); font-size: 0.85rem; }
+.index-item-number { font-weight: 600; color: var(--user-border); }
+.index-item-content { padding: 16px; }
+.index-item-stats { padding: 8px 16px 12px 32px; font-size: 0.85rem; color: var(--text-muted); border-top: 1px solid rgba(0,0,0,0.06); }
+.index-item-commit { margin-top: 6px; padding: 4px 8px; background: #fff3e0; border-radius: 4px; font-size: 0.85rem; color: #e65100; }
+.index-item-commit code { background: rgba(0,0,0,0.08); padding: 1px 4px; border-radius: 3px; font-size: 0.8rem; margin-right: 6px; }
+.commit-card { margin: 8px 0; padding: 10px 14px; background: #fff3e0; border-left: 4px solid #ff9800; border-radius: 6px; }
+.commit-card a { text-decoration: none; color: #5d4037; display: block; }
+.commit-card a:hover { color: #e65100; }
+.commit-card-hash { font-family: monospace; color: #e65100; font-weight: 600; margin-right: 8px; }
+.index-commit { margin-bottom: 12px; padding: 10px 16px; background: #fff3e0; border-left: 4px solid #ff9800; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.index-commit a { display: block; text-decoration: none; color: inherit; }
+.index-commit a:hover { background: rgba(255, 152, 0, 0.1); margin: -10px -16px; padding: 10px 16px; border-radius: 8px; }
+.index-commit-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; margin-bottom: 4px; }
+.index-commit-hash { font-family: monospace; color: #e65100; font-weight: 600; }
+.index-commit-msg { color: #5d4037; }
+.index-item-long-text { margin-top: 8px; padding: 12px; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--assistant-border); }
+.index-item-long-text .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--card-bg)); }
+.index-item-long-text-content { color: var(--text-color); }
+#search-box { display: none; align-items: center; gap: 8px; }
+#search-box input { padding: 6px 12px; border: 1px solid var(--assistant-border); border-radius: 6px; font-size: 16px; width: 180px; }
+#search-box button, #modal-search-btn, #modal-close-btn { background: var(--user-border); color: white; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+#search-box button:hover, #modal-search-btn:hover { background: #1565c0; }
+#modal-close-btn { background: var(--text-muted); margin-left: 8px; }
+#modal-close-btn:hover { background: #616161; }
+#search-modal[open] { border: none; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.2); padding: 0; width: 90vw; max-width: 900px; height: 80vh; max-height: 80vh; display: flex; flex-direction: column; }
+#search-modal::backdrop { background: rgba(0,0,0,0.5); }
+.search-modal-header { display: flex; align-items: center; gap: 8px; padding: 16px; border-bottom: 1px solid var(--assistant-border); background: var(--bg-color); border-radius: 12px 12px 0 0; }
+.search-modal-header input { flex: 1; padding: 8px 12px; border: 1px solid var(--assistant-border); border-radius: 6px; font-size: 16px; }
+#search-status { padding: 8px 16px; font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid rgba(0,0,0,0.06); }
+#search-results { flex: 1; overflow-y: auto; padding: 16px; }
+.search-result { margin-bottom: 16px; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.search-result a { display: block; text-decoration: none; color: inherit; }
+.search-result a:hover { background: rgba(25, 118, 210, 0.05); }
+.search-result-page { padding: 6px 12px; background: rgba(0,0,0,0.03); font-size: 0.8rem; color: var(--text-muted); border-bottom: 1px solid rgba(0,0,0,0.06); }
+.search-result-content { padding: 12px; }
+.search-result mark { background: #fff59d; padding: 1px 2px; border-radius: 2px; }
+@media (max-width: 600px) { body { padding: 8px; } .message, .index-item { border-radius: 8px; } .message-content, .index-item-content { padding: 12px; } pre { font-size: 0.8rem; padding: 8px; } #search-box input { width: 120px; } #search-modal[open] { width: 95vw; height: 90vh; } }
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1><a href="index.html" style="color: inherit; text-decoration: none;">Claude Code transcript</a> - page 1/1</h1>
+        
+
+<div class="pagination"><a href="index.html" class="index-link">Index</a></div>
+
+        
+<div class="message user" id="msg-2026-06-08T15-19-29-897Z"><div class="message-header"><span class="role-label">User</span><a href="#msg-2026-06-08T15-19-29-897Z" class="timestamp-link"><time datetime="2026-06-08T15:19:29.897Z" data-timestamp="2026-06-08T15:19:29.897Z">2026-06-08T15:19:29.897Z</time></a></div><div class="message-content">
+<div class="user-content"><p>You are an AI coding agent building a payment reconciliation service for Parasol Insurance. Query the Backstage catalog to understand the domain, learn the rules, map integrations, and select a template.</p>
+<p>Run these commands in order. After each group, summarize what you learned.</p>
+<h2>Phase 1: Discover</h2>
+<pre><code class="language-bash"># List all domains
+NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:query-catalog-entities --query '{&quot;kind&quot;:&quot;Domain&quot;}' --fields '[&quot;metadata.name&quot;,&quot;metadata.description&quot;]' --backendUrl http://localhost:7007
+
+# Inspect Claims domain
+NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:get-catalog-entity --kind Domain --name claims --backendUrl http://localhost:7007
+
+# Inspect claims-payment-system
+NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:get-catalog-entity --kind System --name claims-payment-system --backendUrl http://localhost:7007
+</code></pre>
+<h2>Phase 2: Learn technology requirements</h2>
+<pre><code class="language-bash"># Read Claims domain handbook
+NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute techdocs-mcp-extras:retrieve-techdocs-content --entityRef domain:default/claims --backendUrl http://localhost:7007
+
+# Read Billing &amp; Payments handbook (your service touches payment data)
+NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute techdocs-mcp-extras:retrieve-techdocs-content --entityRef domain:default/billing-payments --backendUrl http://localhost:7007
+</code></pre>
+<h2>Phase 3: Map integration points</h2>
+<pre><code class="language-bash"># Inspect upstream services
+NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:get-catalog-entity --kind Component --name claims-settlement-service --backendUrl http://localhost:7007
+
+NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:get-catalog-entity --kind Component --name claims-payment-disbursement-service --backendUrl http://localhost:7007
+
+# Find all APIs
+NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:query-catalog-entities --query '{&quot;kind&quot;:&quot;API&quot;}' --fields '[&quot;metadata.name&quot;,&quot;metadata.description&quot;,&quot;spec.owner&quot;]' --backendUrl http://localhost:7007
+
+# Inspect audit-log-api
+NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:get-catalog-entity --kind API --name audit-log-api --backendUrl http://localhost:7007
+</code></pre>
+<h2>Phase 4: Select the right template</h2>
+<pre><code class="language-bash"># List templates
+NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:query-catalog-entities --query '{&quot;kind&quot;:&quot;Template&quot;}' --fields '[&quot;metadata.name&quot;,&quot;metadata.description&quot;,&quot;metadata.tags&quot;]' --backendUrl http://localhost:7007
+
+# Inspect selected template
+NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:get-catalog-entity --kind Template --name parasol-quarkus-service --backendUrl http://localhost:7007
+</code></pre>
+<p>After all phases, produce a final Technology Decision Summary for the payment-reconciliation-service showing every choice and which catalog source informed it. Highlight any cross-domain conflicts you discovered.</p></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-19-33-536Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-19-33-536Z" class="timestamp-link"><time datetime="2026-06-08T15:19:33.536Z" data-timestamp="2026-06-08T15:19:33.536Z">2026-06-08T15:19:33.536Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>I'll work through each phase systematically, querying the Backstage catalog to build a complete picture of the domain before designing the payment reconciliation service.</p>
+<h2>Phase 1: Discover</h2>
+<p>Let me start by discovering the domain landscape.</p></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-19-34-736Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-19-34-736Z" class="timestamp-link"><time datetime="2026-06-08T15:19:34.736Z" data-timestamp="2026-06-08T15:19:34.736Z">2026-06-08T15:19:34.736Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_01PhJdJjRA2UjoCCkP4wm61N">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">List all domains in Backstage catalog</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:query-catalog-entities --query &#39;{&#34;kind&#34;:&#34;Domain&#34;}&#39; --fields &#39;[&#34;metadata.name&#34;,&#34;metadata.description&#34;]&#39; --backendUrl http://localhost:7007 2&gt;/dev/null | tail -20</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T15-19-36-780Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T15-19-36-780Z" class="timestamp-link"><time datetime="2026-06-08T15:19:36.780Z" data-timestamp="2026-06-08T15:19:36.780Z">2026-06-08T15:19:36.780Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>        &quot;name&quot;: &quot;claims&quot;,
+        &quot;description&quot;: &quot;Cross-line-of-business claims management covering intake (FNOL), triage,\nadjuster assignment, damage estimation, reserve setting, fraud detection,\nsettlement payment, subrogation recovery, and litigation management.\n&quot;
+      }
+    },
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;specialty-lines&quot;,
+        &quot;description&quot;: &quot;Non-standard and complex insurance risks including cyber liability, marine\ncargo and hull, aviation hull and liability, and trade credit. These\nproducts require specialist underwriting and bespoke policy wording.\n&quot;
+      }
+    },
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;billing-payments&quot;,
+        &quot;description&quot;: &quot;Premium collection, instalment plan management, direct debit mandates,\ncredit card processing, refunds, and lapse/reinstatement payment flows.\nIntegrates with external payment acquirers and banking partners.\n&quot;
+      }
+    }
+  ],
+  &quot;totalItems&quot;: 14,
+  &quot;hasMoreEntities&quot;: false
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-19-39-981Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-19-39-981Z" class="timestamp-link"><time datetime="2026-06-08T15:19:39.981Z" data-timestamp="2026-06-08T15:19:39.981Z">2026-06-08T15:19:39.981Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_01R1uMnrKR4b2M8iMv1ZhoZ5">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">Extract all domain names</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:query-catalog-entities --query &#39;{&#34;kind&#34;:&#34;Domain&#34;}&#39; --fields &#39;[&#34;metadata.name&#34;,&#34;metadata.description&#34;]&#39; --backendUrl http://localhost:7007 2&gt;/dev/null | grep &#39;&#34;name&#34;&#39; | head -20</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T15-19-41-328Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T15-19-41-328Z" class="timestamp-link"><time datetime="2026-06-08T15:19:41.328Z" data-timestamp="2026-06-08T15:19:41.328Z">2026-06-08T15:19:41.328Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>        &quot;name&quot;: &quot;personal-auto&quot;,
+        &quot;name&quot;: &quot;customer-portal&quot;,
+        &quot;name&quot;: &quot;underwriting&quot;,
+        &quot;name&quot;: &quot;reinsurance&quot;,
+        &quot;name&quot;: &quot;platform-engineering&quot;,
+        &quot;name&quot;: &quot;data-analytics&quot;,
+        &quot;name&quot;: &quot;commercial-lines&quot;,
+        &quot;name&quot;: &quot;compliance-regulatory&quot;,
+        &quot;name&quot;: &quot;life-annuities&quot;,
+        &quot;name&quot;: &quot;personal-property&quot;,
+        &quot;name&quot;: &quot;policy-administration&quot;,
+        &quot;name&quot;: &quot;claims&quot;,
+        &quot;name&quot;: &quot;specialty-lines&quot;,
+        &quot;name&quot;: &quot;billing-payments&quot;,</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-19-44-234Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-19-44-234Z" class="timestamp-link"><time datetime="2026-06-08T15:19:44.234Z" data-timestamp="2026-06-08T15:19:44.234Z">2026-06-08T15:19:44.234Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>Good — 14 domains. Now let me inspect the Claims domain and the claims-payment-system.</p></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-19-45-068Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-19-45-068Z" class="timestamp-link"><time datetime="2026-06-08T15:19:45.068Z" data-timestamp="2026-06-08T15:19:45.068Z">2026-06-08T15:19:45.068Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_01VcM7tRPpQ7MwTzq8Ybap6C">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">Inspect Claims domain entity</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:get-catalog-entity --kind Domain --name claims --backendUrl http://localhost:7007 2&gt;/dev/null | tail -80</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T15-19-46-305Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T15-19-46-305Z" class="timestamp-link"><time datetime="2026-06-08T15:19:46.305Z" data-timestamp="2026-06-08T15:19:46.305Z">2026-06-08T15:19:46.305Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>{
+  &quot;metadata&quot;: {
+    &quot;namespace&quot;: &quot;default&quot;,
+    &quot;annotations&quot;: {
+      &quot;backstage.io/managed-by-location&quot;: &quot;url:https://github.com/redhat-developer/rhdh-agentic/tree/main/catalog/overlays/parasol-foundations-annotated.yaml&quot;,
+      &quot;backstage.io/managed-by-origin-location&quot;: &quot;url:https://github.com/redhat-developer/rhdh-agentic/blob/main/catalog/parasol-catalog-index.yaml&quot;,
+      &quot;backstage.io/view-url&quot;: &quot;https://github.com/redhat-developer/rhdh-agentic/tree/main/catalog/overlays/parasol-foundations-annotated.yaml&quot;,
+      &quot;backstage.io/edit-url&quot;: &quot;https://github.com/redhat-developer/rhdh-agentic/edit/main/catalog/overlays/parasol-foundations-annotated.yaml&quot;,
+      &quot;backstage.io/source-location&quot;: &quot;url:https://github.com/redhat-developer/rhdh-agentic/tree/main/catalog/overlays/&quot;,
+      &quot;backstage.io/techdocs-ref&quot;: &quot;dir:../techdocs/domains/claims&quot;
+    },
+    &quot;name&quot;: &quot;claims&quot;,
+    &quot;title&quot;: &quot;Claims&quot;,
+    &quot;description&quot;: &quot;Cross-line-of-business claims management covering intake (FNOL), triage,\nadjuster assignment, damage estimation, reserve setting, fraud detection,\nsettlement payment, subrogation recovery, and litigation management.\n&quot;,
+    &quot;uid&quot;: &quot;aa70a987-639c-45aa-95fc-9ecefc65a3e7&quot;,
+    &quot;etag&quot;: &quot;2c3953bd75d5c4ae1bfa40266110f1406aa15176&quot;
+  },
+  &quot;apiVersion&quot;: &quot;backstage.io/v1alpha1&quot;,
+  &quot;kind&quot;: &quot;Domain&quot;,
+  &quot;spec&quot;: {
+    &quot;owner&quot;: &quot;group:default/claims-engineering&quot;
+  },
+  &quot;relations&quot;: [
+    {
+      &quot;type&quot;: &quot;hasPart&quot;,
+      &quot;targetRef&quot;: &quot;system:default/claims-assessment-system&quot;
+    },
+    {
+      &quot;type&quot;: &quot;hasPart&quot;,
+      &quot;targetRef&quot;: &quot;system:default/claims-document-system&quot;
+    },
+    {
+      &quot;type&quot;: &quot;hasPart&quot;,
+      &quot;targetRef&quot;: &quot;system:default/claims-fraud-detection-system&quot;
+    },
+    {
+      &quot;type&quot;: &quot;hasPart&quot;,
+      &quot;targetRef&quot;: &quot;system:default/claims-litigation-system&quot;
+    },
+    {
+      &quot;type&quot;: &quot;hasPart&quot;,
+      &quot;targetRef&quot;: &quot;system:default/claims-payment-system&quot;
+    },
+    {
+      &quot;type&quot;: &quot;hasPart&quot;,
+      &quot;targetRef&quot;: &quot;system:default/fnol-system&quot;
+    },
+    {
+      &quot;type&quot;: &quot;ownedBy&quot;,
+      &quot;targetRef&quot;: &quot;group:default/claims-engineering&quot;
+    }
+  ]
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-19-48-858Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-19-48-858Z" class="timestamp-link"><time datetime="2026-06-08T15:19:48.858Z" data-timestamp="2026-06-08T15:19:48.858Z">2026-06-08T15:19:48.858Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_01UZsz2ryjGeYhaK93ddxcHR">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">Inspect claims-payment-system</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:get-catalog-entity --kind System --name claims-payment-system --backendUrl http://localhost:7007 2&gt;/dev/null | tail -80</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T15-19-50-182Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T15-19-50-182Z" class="timestamp-link"><time datetime="2026-06-08T15:19:50.182Z" data-timestamp="2026-06-08T15:19:50.182Z">2026-06-08T15:19:50.182Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>{
+  &quot;metadata&quot;: {
+    &quot;namespace&quot;: &quot;default&quot;,
+    &quot;annotations&quot;: {
+      &quot;backstage.io/managed-by-location&quot;: &quot;url:https://github.com/redhat-developer/rhdh-agentic/tree/main/catalog/overlays/parasol-foundations-annotated.yaml&quot;,
+      &quot;backstage.io/managed-by-origin-location&quot;: &quot;url:https://github.com/redhat-developer/rhdh-agentic/blob/main/catalog/parasol-catalog-index.yaml&quot;,
+      &quot;backstage.io/view-url&quot;: &quot;https://github.com/redhat-developer/rhdh-agentic/tree/main/catalog/overlays/parasol-foundations-annotated.yaml&quot;,
+      &quot;backstage.io/edit-url&quot;: &quot;https://github.com/redhat-developer/rhdh-agentic/edit/main/catalog/overlays/parasol-foundations-annotated.yaml&quot;,
+      &quot;backstage.io/source-location&quot;: &quot;url:https://github.com/redhat-developer/rhdh-agentic/tree/main/catalog/overlays/&quot;
+    },
+    &quot;name&quot;: &quot;claims-payment-system&quot;,
+    &quot;title&quot;: &quot;Claims Payment System&quot;,
+    &quot;description&quot;: &quot;Processes approved claim settlements and interim payments. Supports bank\ntransfer, cheque, and digital wallet disbursements. Enforces dual-control\napproval for payments above threshold limits.\n&quot;,
+    &quot;uid&quot;: &quot;41fddd60-4647-45a9-9e9f-32c114cde80a&quot;,
+    &quot;etag&quot;: &quot;e6655cf5c99639e9d473300145de8b300ba58ce6&quot;
+  },
+  &quot;apiVersion&quot;: &quot;backstage.io/v1alpha1&quot;,
+  &quot;kind&quot;: &quot;System&quot;,
+  &quot;spec&quot;: {
+    &quot;owner&quot;: &quot;group:default/claims-engineering&quot;,
+    &quot;domain&quot;: &quot;claims&quot;
+  },
+  &quot;relations&quot;: [
+    {
+      &quot;type&quot;: &quot;hasPart&quot;,
+      &quot;targetRef&quot;: &quot;component:default/bank-account-validation-service&quot;
+    },
+    {
+      &quot;type&quot;: &quot;hasPart&quot;,
+      &quot;targetRef&quot;: &quot;component:default/claims-payment-disbursement-service&quot;
+    },
+    {
+      &quot;type&quot;: &quot;hasPart&quot;,
+      &quot;targetRef&quot;: &quot;component:default/claims-settlement-service&quot;
+    },
+    {
+      &quot;type&quot;: &quot;hasPart&quot;,
+      &quot;targetRef&quot;: &quot;component:default/subrogation-recovery-service&quot;
+    },
+    {
+      &quot;type&quot;: &quot;hasPart&quot;,
+      &quot;targetRef&quot;: &quot;component:default/supplier-payment-service&quot;
+    },
+    {
+      &quot;type&quot;: &quot;ownedBy&quot;,
+      &quot;targetRef&quot;: &quot;group:default/claims-engineering&quot;
+    },
+    {
+      &quot;type&quot;: &quot;partOf&quot;,
+      &quot;targetRef&quot;: &quot;domain:default/claims&quot;
+    }
+  ]
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-20-00-105Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-20-00-105Z" class="timestamp-link"><time datetime="2026-06-08T15:20:00.105Z" data-timestamp="2026-06-08T15:20:00.105Z">2026-06-08T15:20:00.105Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p><code>★ Insight ─────────────────────────────────────</code>
+<strong>Phase 1 Discovery Summary:</strong>
+- <strong>14 domains</strong> in the Parasol Insurance catalog — the two most relevant are <strong>Claims</strong> and <strong>Billing &amp; Payments</strong>. A payment reconciliation service sits at the intersection of both.
+- The <strong>Claims domain</strong> has 6 systems; our target is <code>claims-payment-system</code>, owned by <code>claims-engineering</code>.
+- The <code>claims-payment-system</code> contains 5 components: <code>claims-settlement-service</code>, <code>claims-payment-disbursement-service</code>, <code>bank-account-validation-service</code>, <code>subrogation-recovery-service</code>, and <code>supplier-payment-service</code>. These are the services our reconciliation service must integrate with.
+- Key detail: the system enforces <strong>dual-control approval</strong> for payments above threshold limits — our reconciliation service will need to be aware of this approval workflow.
+<code>─────────────────────────────────────────────────</code></p>
+<h2>Phase 2: Learn technology requirements</h2>
+<p>Now let me read the domain handbooks via TechDocs to understand the technology standards.</p></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-20-01-843Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-20-01-843Z" class="timestamp-link"><time datetime="2026-06-08T15:20:01.843Z" data-timestamp="2026-06-08T15:20:01.843Z">2026-06-08T15:20:01.843Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_016JevESZqbSxRy3Cmw3yKY3">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">Read Claims domain TechDocs handbook</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute techdocs-mcp-extras:retrieve-techdocs-content --entityRef domain:default/claims --backendUrl http://localhost:7007 2&gt;/dev/null | tail -200</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T15-20-03-517Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T15-20-03-517Z" class="timestamp-link"><time datetime="2026-06-08T15:20:03.517Z" data-timestamp="2026-06-08T15:20:03.517Z">2026-06-08T15:20:03.517Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>{
+  &quot;entityRef&quot;: &quot;domain:default/claims&quot;,
+  &quot;name&quot;: &quot;claims&quot;,
+  &quot;title&quot;: &quot;Claims&quot;,
+  &quot;kind&quot;: &quot;domain&quot;,
+  &quot;namespace&quot;: &quot;default&quot;,
+  &quot;content&quot;: &quot;     Parasol Claims Domain Handbook    :root{--md-text-font:\&quot;Roboto\&quot;;--md-code-font:\&quot;Roboto Mono\&quot;} \\_\\_md\\_scope=new URL(\&quot;.\&quot;,location),\\_\\_md\\_hash=e=&gt;\\[...e\\].reduce(((e,\\_)=&gt;(e&lt;&lt;5)-e+\\_.charCodeAt(0)),0),\\_\\_md\\_get=(e,\\_=localStorage,t=\\_\\_md\\_scope)=&gt;JSON.parse(\\_.getItem(t.pathname+\&quot;.\&quot;+e)),\\_\\_md\\_set=(e,\\_,t=localStorage,a=\\_\\_md\\_scope)=&gt;{try{t.setItem(a.pathname+\&quot;.\&quot;+e,JSON.stringify(\\_))}catch(e){}}  \n\n[Skip to content](#claims-domain-handbook)\n\n[](. \&quot;Parasol Claims Domain Handbook\&quot;)\n\nParasol Claims Domain Handbook\n\nHome\n\n[\n\nGitHub\n\n](https://github.com/redhat-developer/rhdh-agentic/tree/main/catalog/techdocs/domains/claims \&quot;Go to repository\&quot;)\n\n[](. \&quot;Parasol Claims Domain Handbook\&quot;)Parasol Claims Domain Handbook\n\n[\n\nGitHub\n\n](https://github.com/redhat-developer/rhdh-agentic/tree/main/catalog/techdocs/domains/claims \&quot;Go to repository\&quot;)\n\n-    Home [Home](.)\n    \n    Table of contents\n    \n    -   [Approved Stack Matrix](#approved-stack-matrix)\n        \n        -   [ML/AI Stack (Fraud Detection)](#mlai-stack-fraud-detection)\n        \n    -   [Governance Rules](#governance-rules)\n        \n        -   [Mandatory](#mandatory)\n        -   [Requires Approval](#requires-approval)\n        -   [Forbidden](#forbidden)\n        \n    -   [Key Systems](#key-systems)\n    -   [When to Deviate](#when-to-deviate)\n    \n\nTable of contents\n\n-   [Approved Stack Matrix](#approved-stack-matrix)\n    \n    -   [ML/AI Stack (Fraud Detection)](#mlai-stack-fraud-detection)\n    \n-   [Governance Rules](#governance-rules)\n    \n    -   [Mandatory](#mandatory)\n    -   [Requires Approval](#requires-approval)\n    -   [Forbidden](#forbidden)\n    \n-   [Key Systems](#key-systems)\n-   [When to Deviate](#when-to-deviate)\n\n[](https://github.com/redhat-developer/rhdh-agentic/edit/main/catalog/techdocs/domains/claims/docs/index.md \&quot;Edit this page\&quot;)\n\n# Claims Domain Handbook[¶](#claims-domain-handbook \&quot;Permanent link\&quot;)\n\nThe Claims domain manages the full claims lifecycle across all lines of business: intake (FNOL), triage, adjuster assignment, damage estimation, reserve setting, fraud detection, settlement payment, subrogation recovery, and litigation management.\n\n**Owner**: `claims-engineering` (13 engineers) **Components**: 27 services across 6 systems **APIs**: 3 (FNOL Submission, Claims Status, Fraud Score)\n\n## Approved Stack Matrix[¶](#approved-stack-matrix \&quot;Permanent link\&quot;)\n\nTechnology\n\nStatus\n\nCount\n\nRationale\n\n**Java (Quarkus)**\n\nRequired\n\n17 components\n\nPrimary runtime for all transactional claims services. Quarkus preferred for new services; JBoss EAP acceptable for migration of existing services.\n\n**Python**\n\nAllowed\n\n7 components\n\nUsed for estimation, valuation, and ML workloads (fraud scoring, damage estimation, coverage verification). Allowed only for analytical or ML components.\n\n**Node.js**\n\nAllowed\n\n2 components\n\nUsed for notification services (claimant-notification-service) and real-time event consumers. Allowed for I/O-bound, non-transactional workloads only.\n\n**REST (OpenAPI 3.0.3)**\n\nRequired\n\n24 components\n\nDefault communication pattern. All synchronous service interfaces must use REST with OpenAPI specs following org-wide conventions.\n\n**SOAP/ACORD XML**\n\nRestricted\n\n1 component\n\nLegacy only (fnol-channel-adapter-service). No new SOAP interfaces. Existing ACORD integrations maintained for third-party adjuster compatibility.\n\n**OpenShift 4**\n\nRequired\n\nAll\n\nContainer orchestration platform. All claims services run on OpenShift.\n\n**AMQ Streams (Kafka)**\n\nPreferred\n\n—\n\nEvent-driven claim lifecycle events (FNOL created, status changed, payment approved). Use for all asynchronous domain events.\n\n**Apache Camel**\n\nPreferred\n\n—\n\nIntegration framework for channel adapters and external system connectors (ACORD, third-party adjusters).\n\n**Keycloak**\n\nRequired\n\n—\n\nAuthentication for adjusters, claimants, and SIU investigators. OIDC/OAuth2 flows.\n\n**Red Hat ACS**\n\nRequired\n\n—\n\nContainer security scanning. Mandatory for all images before production deployment.\n\n**Instana**\n\nRequired\n\n—\n\nAPM and distributed tracing. Claims services must meet p99 &lt; 500ms latency SLO.\n\n### ML/AI Stack (Fraud Detection)[¶](#mlai-stack-fraud-detection \&quot;Permanent link\&quot;)\n\nTechnology\n\nStatus\n\nRationale\n\n**watsonx.ai**\n\nPreferred\n\nModel training for fraud scoring and network graph analysis.\n\n**OpenShift AI**\n\nTrial\n\nModel serving infrastructure for real-time fraud scoring (fraud-score-service).\n\n**IBM Granite**\n\nTrial\n\nFoundation model for fraud text analysis (claim narrative screening).\n\n**watsonx.governance**\n\nRequired for ML\n\nBias detection and model drift monitoring for all ML models in production.\n\n## Governance Rules[¶](#governance-rules \&quot;Permanent link\&quot;)\n\n### Mandatory[¶](#mandatory \&quot;Permanent link\&quot;)\n\n-   All new claims services MUST be written in Java using Quarkus, unless the workload is analytical/ML (use Python) or I/O-bound notification delivery (Node.js allowed).\n-   All services MUST expose REST APIs documented with OpenAPI 3.0.3.\n-   All claim state transitions MUST emit Kafka events to the claims event topic.\n-   All services processing PII (claimant names, addresses, policy details) MUST register with the GDPR Compliance System and implement DSAR support.\n-   Fraud scoring models MUST be registered with watsonx.governance before production deployment.\n-   All services MUST meet the p99 &lt; 500ms latency SLO (customer-facing).\n\n### Requires Approval[¶](#requires-approval \&quot;Permanent link\&quot;)\n\n-   Using a database technology other than the domain&#x27;s standard PostgreSQL/Db2 stack.\n-   Introducing a new third-party integration (external adjuster, legal service provider).\n-   Deploying an ML model that makes automated claim decisions (fraud referral to SIU is allowed; automated denial is not without Claims Director approval).\n-   Adding a new ACORD message type to the channel adapter.\n\n### Forbidden[¶](#forbidden \&quot;Permanent link\&quot;)\n\n-   New SOAP interfaces. Use REST for all new integrations; wrap legacy SOAP endpoints in REST adapters if external systems require them.\n-   Storing unmasked PII in application logs.\n-   Direct database access from services outside the claims domain. Use the published APIs (FNOL Submission, Claims Status, Fraud Score).\n-   Running ML inference outside OpenShift AI / watsonx.ai managed infrastructure.\n\n## Key Systems[¶](#key-systems \&quot;Permanent link\&quot;)\n\nSystem\n\nPurpose\n\nComponents\n\n`fnol-system`\n\nFirst Notice of Loss intake and triage\n\nfnol-intake-service, fnol-triage-router, fnol-channel-adapter-service, coverage-verification-service, claimant-notification-service\n\n`claims-assessment-system`\n\nAdjuster assignment and damage estimation\n\nadjuster-assignment-service, damage-estimation-service, reserve-calculation-service, claims-decision-service, claim-status-tracker\n\n`claims-payment-system`\n\nSettlement and payment processing\n\nclaims-settlement-service, payment-disbursement-service, subrogation-recovery-service\n\n`claims-fraud-detection-system`\n\nML-based fraud scoring\n\nfraud-score-service, fraud-network-graph-service, siu-referral-service, fraud-rules-engine\n\n`claims-document-system`\n\nDocument management\n\nclaims-document-ingestion, document-classification-service, claims-archive-service\n\n`claims-litigation-system`\n\nLegal proceedings management\n\nlitigation-tracking-service, panel-solicitor-gateway (legacy SOAP), recovery-accounting-service\n\n## When to Deviate[¶](#when-to-deviate \&quot;Permanent link\&quot;)\n\nIf you need to use a technology not listed above:\n\n1.  **Document the need** in a system ADR explaining why the approved stack does not meet the requirement.\n2.  **Get approval** from the Claims Engineering tech lead and Platform Engineering.\n3.  **Assess security impact** — any new runtime or framework must pass ACS scanning and Instana instrumentation requirements.\n4.  **Time-box the exception** — deviations are granted for a specific use case, not as blanket approvals. Re-evaluate at the next quarterly architecture review.\n\nExceptions granted in the past:\n\n-   Graph database (Neo4j) for fraud-network-graph-service — approved because relational databases cannot efficiently traverse the multi-hop fraud networks required for SIU investigations.\n-   ACORD XML in fnol-channel-adapter-service — maintained for backward compatibility with third-party loss adjusters who cannot migrate to REST.\n\nvar target=document.getElementById(location.hash.slice(1));target&amp;&amp;target.name&amp;&amp;(target.checked=target.name.startsWith(\&quot;\\_\\_tabbed\\_\&quot;))\n\nMade with [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/)\n\n{\&quot;annotate\&quot;: null, \&quot;base\&quot;: \&quot;.\&quot;, \&quot;features\&quot;: \\[\&quot;navigation.footer\&quot;, \&quot;content.action.edit\&quot;\\], \&quot;search\&quot;: \&quot;assets/javascripts/workers/search.2c215733.min.js\&quot;, \&quot;tags\&quot;: null, \&quot;translations\&quot;: {\&quot;clipboard.copied\&quot;: \&quot;Copied to clipboard\&quot;, \&quot;clipboard.copy\&quot;: \&quot;Copy to clipboard\&quot;, \&quot;search.result.more.one\&quot;: \&quot;1 more on this page\&quot;, \&quot;search.result.more.other\&quot;: \&quot;# more on this page\&quot;, \&quot;search.result.none\&quot;: \&quot;No matching documents\&quot;, \&quot;search.result.one\&quot;: \&quot;1 matching document\&quot;, \&quot;search.result.other\&quot;: \&quot;# matching documents\&quot;, \&quot;search.result.placeholder\&quot;: \&quot;Type to start searching\&quot;, \&quot;search.result.term.missing\&quot;: \&quot;Missing\&quot;, \&quot;select.version\&quot;: \&quot;Select version\&quot;}, \&quot;version\&quot;: null}&quot;,
+  &quot;pageTitle&quot;: &quot;Parasol Claims Domain Handbook&quot;,
+  &quot;path&quot;: &quot;index.html&quot;,
+  &quot;contentType&quot;: &quot;text&quot;,
+  &quot;lastModified&quot;: &quot;+058405-05-28T18:13:18.000Z&quot;,
+  &quot;metadata&quot;: {
+    &quot;lastUpdated&quot;: &quot;+058405-05-28T18:13:18.000Z&quot;,
+    &quot;buildTimestamp&quot;: 1780929396798,
+    &quot;siteName&quot;: &quot;Parasol Claims Domain Handbook&quot;,
+    &quot;siteDescription&quot;: &quot;Approved stack, governance rules, and architectural guidance for the Claims domain&quot;
+  }
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-20-06-381Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-20-06-381Z" class="timestamp-link"><time datetime="2026-06-08T15:20:06.381Z" data-timestamp="2026-06-08T15:20:06.381Z">2026-06-08T15:20:06.381Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>Excellent — the Claims handbook is rich. Now let me get the Billing &amp; Payments handbook.</p></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-20-09-185Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-20-09-185Z" class="timestamp-link"><time datetime="2026-06-08T15:20:09.185Z" data-timestamp="2026-06-08T15:20:09.185Z">2026-06-08T15:20:09.185Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_01Vqs1g1MxzM1EEhw1WvtBdZ">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">Read Billing &amp; Payments domain TechDocs handbook</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute techdocs-mcp-extras:retrieve-techdocs-content --entityRef domain:default/billing-payments --backendUrl http://localhost:7007 2&gt;/dev/null | tail -200</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T15-20-10-413Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T15-20-10-413Z" class="timestamp-link"><time datetime="2026-06-08T15:20:10.413Z" data-timestamp="2026-06-08T15:20:10.413Z">2026-06-08T15:20:10.413Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>{
+  &quot;entityRef&quot;: &quot;domain:default/billing-payments&quot;,
+  &quot;name&quot;: &quot;billing-payments&quot;,
+  &quot;title&quot;: &quot;Billing &amp; Payments&quot;,
+  &quot;kind&quot;: &quot;domain&quot;,
+  &quot;namespace&quot;: &quot;default&quot;,
+  &quot;content&quot;: &quot;     Parasol Billing Payments Domain Handbook    :root{--md-text-font:\&quot;Roboto\&quot;;--md-code-font:\&quot;Roboto Mono\&quot;} \\_\\_md\\_scope=new URL(\&quot;.\&quot;,location),\\_\\_md\\_hash=e=&gt;\\[...e\\].reduce(((e,\\_)=&gt;(e&lt;&lt;5)-e+\\_.charCodeAt(0)),0),\\_\\_md\\_get=(e,\\_=localStorage,t=\\_\\_md\\_scope)=&gt;JSON.parse(\\_.getItem(t.pathname+\&quot;.\&quot;+e)),\\_\\_md\\_set=(e,\\_,t=localStorage,a=\\_\\_md\\_scope)=&gt;{try{t.setItem(a.pathname+\&quot;.\&quot;+e,JSON.stringify(\\_))}catch(e){}}  \n\n[Skip to content](#billing-payments-domain-handbook)\n\n[](. \&quot;Parasol Billing Payments Domain Handbook\&quot;)\n\nParasol Billing Payments Domain Handbook\n\nHome\n\n[\n\nGitHub\n\n](https://github.com/redhat-developer/rhdh-agentic/tree/main/catalog/techdocs/domains/billing-payments \&quot;Go to repository\&quot;)\n\n[](. \&quot;Parasol Billing Payments Domain Handbook\&quot;)Parasol Billing Payments Domain Handbook\n\n[\n\nGitHub\n\n](https://github.com/redhat-developer/rhdh-agentic/tree/main/catalog/techdocs/domains/billing-payments \&quot;Go to repository\&quot;)\n\n-    Home [Home](.)\n    \n    Table of contents\n    \n    -   [Domain Overview](#domain-overview)\n        \n        -   [Published APIs](#published-apis)\n        -   [Notable Tags](#notable-tags)\n        -   [Compliance Requirements](#compliance-requirements)\n        \n    -   [Approved Stack Matrix](#approved-stack-matrix)\n        \n        -   [Tech Radar Summary](#tech-radar-summary)\n        \n    -   [Governance Rules](#governance-rules)\n        \n        -   [Mandatory](#mandatory)\n        -   [Requires Approval](#requires-approval)\n        -   [Forbidden](#forbidden)\n        \n    -   [When to Deviate](#when-to-deviate)\n        \n        -   [Exception Process](#exception-process)\n        -   [Common Valid Exceptions](#common-valid-exceptions)\n        -   [Questions](#questions)\n        \n    \n\nTable of contents\n\n-   [Domain Overview](#domain-overview)\n    \n    -   [Published APIs](#published-apis)\n    -   [Notable Tags](#notable-tags)\n    -   [Compliance Requirements](#compliance-requirements)\n    \n-   [Approved Stack Matrix](#approved-stack-matrix)\n    \n    -   [Tech Radar Summary](#tech-radar-summary)\n    \n-   [Governance Rules](#governance-rules)\n    \n    -   [Mandatory](#mandatory)\n    -   [Requires Approval](#requires-approval)\n    -   [Forbidden](#forbidden)\n    \n-   [When to Deviate](#when-to-deviate)\n    \n    -   [Exception Process](#exception-process)\n    -   [Common Valid Exceptions](#common-valid-exceptions)\n    -   [Questions](#questions)\n    \n\n[](https://github.com/redhat-developer/rhdh-agentic/edit/main/catalog/techdocs/domains/billing-payments/docs/index.md \&quot;Edit this page\&quot;)\n\n# Billing &amp; Payments Domain Handbook[¶](#billing-payments-domain-handbook \&quot;Permanent link\&quot;)\n\nDomain handbook for the Billing &amp; Payments domain at Parasol Insurance Group. Owner: `billing-payments-engineering`.\n\n## Domain Overview[¶](#domain-overview \&quot;Permanent link\&quot;)\n\nThe Billing &amp; Payments domain contains **14 components** across 4 systems:\n\nSystem\n\nPurpose\n\n`premium-collection-system`\n\nScheduled premium collection, direct debit mandates, payment retry logic\n\n`payment-processing-system`\n\nReal-time payment authorization, PCI-DSS cardholder data handling\n\n`refunds-adjustments-system`\n\nRefund processing, premium adjustments, credit note generation\n\n`billing-account-system`\n\nBilling account lifecycle, ledger management, statement generation\n\n**Language breakdown:** Java (13), Python (1). **API style:** REST (all 14 components).\n\n### Published APIs[¶](#published-apis \&quot;Permanent link\&quot;)\n\nAPI\n\nVersion\n\nVisibility\n\nTags\n\nDescription\n\nPremium Payment API\n\nv2\n\nPublic\n\n`pci-dss`\n\nPayment submission, status inquiry, refund initiation\n\n### Notable Tags[¶](#notable-tags \&quot;Permanent link\&quot;)\n\n`ledger`, `open-banking`, `direct-debit`, `reconciliation`, `pci-dss`.\n\n### Compliance Requirements[¶](#compliance-requirements \&quot;Permanent link\&quot;)\n\n**PCI-DSS Level 1** compliance is mandatory for all components in `payment-processing-system` and any component that handles, transmits, or stores cardholder data. This is the highest PCI compliance level and requires annual on-site audit.\n\n* * *\n\n## Approved Stack Matrix[¶](#approved-stack-matrix \&quot;Permanent link\&quot;)\n\nTechnology\n\nStatus\n\nCount\n\nRationale\n\n**Quarkus**\n\nPreferred\n\nNew Java services\n\nDefault framework for all new services. Fast startup, low memory footprint on OpenShift.\n\n**JBoss EAP**\n\nAllowed\n\nLegacy services\n\nExisting EAP workloads may remain. New services must use Quarkus.\n\n**Python**\n\nRestricted\n\n1 component\n\nLimited to reconciliation batch jobs. Not permitted for payment-path services.\n\n**OpenShift 4**\n\nRequired\n\nAll\n\nEvery component must deploy to OpenShift 4.\n\n**IBM MQ**\n\nRequired\n\nPayment flows\n\nGuaranteed-delivery messaging for all payment transactions. Ensures no payment message is lost.\n\n**Keycloak**\n\nRequired\n\nAll public-facing\n\nOAuth 2.0 / OIDC for Premium Payment API and internal service auth.\n\n**ACS (Advanced Cluster Security)**\n\nRequired\n\nAll\n\nRuntime security scanning, vulnerability detection, and compliance enforcement.\n\n**Guardium**\n\nRequired\n\nPCI-DSS scope\n\nDatabase activity monitoring for all datastores in PCI-DSS scope. Required for audit trail.\n\n**Instana**\n\nRequired\n\nAll\n\nAPM, distributed tracing, and real-time alerting. PCI-DSS requires full transaction traceability.\n\n### Tech Radar Summary[¶](#tech-radar-summary \&quot;Permanent link\&quot;)\n\n-   **ADOPT:** Quarkus, JBoss EAP, OpenShift 4, IBM MQ, Keycloak, ACS, Guardium, Instana\n\n* * *\n\n## Governance Rules[¶](#governance-rules \&quot;Permanent link\&quot;)\n\n### Mandatory[¶](#mandatory \&quot;Permanent link\&quot;)\n\n1.  All new services **MUST** use **Quarkus**. Python is restricted to non-payment batch workloads only.\n2.  All services **MUST** deploy to **OpenShift 4** using Parasol Helm charts with PCI-hardened base images.\n3.  All payment transaction messaging **MUST** use **IBM MQ** with guaranteed delivery. AMQ Streams (Kafka) is not approved for payment-critical paths due to at-least-once semantics.\n4.  All public APIs **MUST** authenticate via **Keycloak** (OAuth 2.0 / OIDC).\n5.  All components in PCI-DSS scope **MUST** have **Guardium** database activity monitoring enabled.\n6.  All components **MUST** have **ACS** runtime policies active. No container may run without ACS enforcement.\n7.  All components **MUST** emit distributed traces to **Instana**. Trace context propagation is mandatory across all service boundaries.\n8.  Components tagged `pci-dss` **MUST NOT** log, cache, or persist cardholder data (PAN, CVV, expiry) in plaintext. Tokenization is required before any storage.\n9.  Components tagged `ledger` **MUST** implement double-entry accounting with immutable audit logs.\n10.  Components tagged `direct-debit` **MUST** implement retry logic with configurable backoff and dead-letter queue processing via IBM MQ.\n\n### Requires Approval[¶](#requires-approval \&quot;Permanent link\&quot;)\n\n-   Introducing any new datastore (requires `billing-payments-engineering` lead + Data Governance + PCI QSA review).\n-   Using AMQ Streams (Kafka) for any messaging within this domain (must demonstrate the flow is not payment-critical).\n-   Any change to the Premium Payment API contract (requires `billing-payments-engineering` lead + API governance review).\n-   Using Python for any new component (must justify why Java/Quarkus is insufficient).\n-   Storing any data outside the EU (data residency requirement for payment data).\n\n### Forbidden[¶](#forbidden \&quot;Permanent link\&quot;)\n\n-   Running services outside OpenShift 4.\n-   Using an unapproved message broker for payment transactions (IBM MQ only).\n-   Logging or caching cardholder data in plaintext.\n-   Disabling ACS or Guardium on any component.\n-   Using non-tokenized PAN in any inter-service communication.\n-   Deploying components without Instana instrumentation.\n\n* * *\n\n## When to Deviate[¶](#when-to-deviate \&quot;Permanent link\&quot;)\n\nDeviations in the Billing &amp; Payments domain carry elevated risk due to PCI-DSS compliance obligations. The exception process is stricter than other domains.\n\n### Exception Process[¶](#exception-process \&quot;Permanent link\&quot;)\n\n1.  **Raise** an exception request in `#billing-payments-engineering` Slack channel with:\n    -   The governance rule being deviated from.\n    -   The technical justification.\n    -   The PCI-DSS impact assessment (if the deviation affects components in PCI scope).\n    -   The proposed alternative and its trade-offs.\n    -   The expected duration (permanent or time-boxed).\n2.  **Review** by:\n    -   `billing-payments-engineering` lead (required).\n    -   `parasol-platform-engineering` member (required).\n    -   PCI Qualified Security Assessor (required if deviation affects PCI-DSS scope).\n3.  **Record** the approved exception as an ADR in the affected component&#x27;s `docs/adrs/` directory.\n4.  **Tag** the component with `governance-exception` in the Backstage catalog.\n5.  **Re-validate** the exception at every PCI-DSS audit cycle (annual).\n\n### Common Valid Exceptions[¶](#common-valid-exceptions \&quot;Permanent link\&quot;)\n\n-   **Open Banking integrations:** Third-party open-banking APIs may require non-standard authentication flows. These must be approved by the PCI QSA and documented in an ADR.\n-   **Reconciliation batch jobs:** Python-based reconciliation jobs that do not handle cardholder data may use relaxed messaging requirements (AMQ Streams instead of IBM MQ) with approval.\n-   **Vendor payment gateways:** If a payment gateway vendor requires a specific SDK or protocol (e.g., ISO 8583), the integration service may use non-standard technologies with full security review.\n\n### Questions[¶](#questions \&quot;Permanent link\&quot;)\n\nContact `billing-payments-engineering` via the internal developer portal or `#billing-payments-engineering` Slack channel. For PCI-DSS-specific questions, contact `parasol-security-engineering`.\n\nvar target=document.getElementById(location.hash.slice(1));target&amp;&amp;target.name&amp;&amp;(target.checked=target.name.startsWith(\&quot;\\_\\_tabbed\\_\&quot;))\n\nMade with [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/)\n\n{\&quot;annotate\&quot;: null, \&quot;base\&quot;: \&quot;.\&quot;, \&quot;features\&quot;: \\[\&quot;navigation.footer\&quot;, \&quot;content.action.edit\&quot;\\], \&quot;search\&quot;: \&quot;assets/javascripts/workers/search.2c215733.min.js\&quot;, \&quot;tags\&quot;: null, \&quot;translations\&quot;: {\&quot;clipboard.copied\&quot;: \&quot;Copied to clipboard\&quot;, \&quot;clipboard.copy\&quot;: \&quot;Copy to clipboard\&quot;, \&quot;search.result.more.one\&quot;: \&quot;1 more on this page\&quot;, \&quot;search.result.more.other\&quot;: \&quot;# more on this page\&quot;, \&quot;search.result.none\&quot;: \&quot;No matching documents\&quot;, \&quot;search.result.one\&quot;: \&quot;1 matching document\&quot;, \&quot;search.result.other\&quot;: \&quot;# matching documents\&quot;, \&quot;search.result.placeholder\&quot;: \&quot;Type to start searching\&quot;, \&quot;search.result.term.missing\&quot;: \&quot;Missing\&quot;, \&quot;select.version\&quot;: \&quot;Select version\&quot;}, \&quot;version\&quot;: null}&quot;,
+  &quot;pageTitle&quot;: &quot;Parasol Billing Payments Domain Handbook&quot;,
+  &quot;path&quot;: &quot;index.html&quot;,
+  &quot;contentType&quot;: &quot;text&quot;,
+  &quot;lastModified&quot;: &quot;+058405-05-28T20:33:18.000Z&quot;,
+  &quot;metadata&quot;: {
+    &quot;lastUpdated&quot;: &quot;+058405-05-28T20:33:18.000Z&quot;,
+    &quot;buildTimestamp&quot;: 1780929405198,
+    &quot;siteName&quot;: &quot;Parasol Billing Payments Domain Handbook&quot;,
+    &quot;siteDescription&quot;: &quot;Approved stack, governance rules, and architectural guidance for the Billing Payments domain&quot;
+  }
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-20-23-065Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-20-23-065Z" class="timestamp-link"><time datetime="2026-06-08T15:20:23.065Z" data-timestamp="2026-06-08T15:20:23.065Z">2026-06-08T15:20:23.065Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p><code>★ Insight ─────────────────────────────────────</code>
+<strong>Phase 2 — Critical Cross-Domain Conflict Discovered:</strong></p>
+<p>This is the most important finding so far. The two domains have <strong>conflicting messaging requirements</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Claims Domain</th>
+<th>Billing &amp; Payments Domain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Messaging</strong></td>
+<td>AMQ Streams (Kafka) — <em>Preferred</em></td>
+<td>IBM MQ — <em>Required</em> for payment flows</td>
+</tr>
+<tr>
+<td><strong>Rationale</strong></td>
+<td>Event-driven claim lifecycle events</td>
+<td>Guaranteed delivery; Kafka's at-least-once semantics not approved for payment-critical paths</td>
+</tr>
+</tbody>
+</table>
+<p>Since a payment reconciliation service sits at the <strong>intersection</strong> of both domains, it must reconcile this conflict. The Billing &amp; Payments handbook provides a carve-out: <em>"Reconciliation batch jobs that do not handle cardholder data may use relaxed messaging requirements (AMQ Streams instead of IBM MQ) with approval."</em> — but this requires explicit approval.</p>
+<p><strong>Other key technology requirements:</strong>
+- <strong>Language</strong>: Java (Quarkus) — required by both domains
+- <strong>Platform</strong>: OpenShift 4 — required by both
+- <strong>Database</strong>: PostgreSQL/Db2 (Claims) — deviation needs approval
+- <strong>Security</strong>: Keycloak (OIDC), ACS, Instana — both domains
+- <strong>PCI-DSS</strong>: If our service touches cardholder data → PCI-DSS Level 1 + Guardium required
+- <strong>Ledger tag</strong>: If tagged <code>ledger</code> → must implement double-entry accounting with immutable audit logs
+- <strong>Claims events</strong>: Must emit Kafka events for all claim state transitions
+<code>─────────────────────────────────────────────────</code></p>
+<h2>Phase 3: Map integration points</h2>
+<p>Now let me inspect the upstream services and APIs we'll integrate with.</p></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-20-25-729Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-20-25-729Z" class="timestamp-link"><time datetime="2026-06-08T15:20:25.729Z" data-timestamp="2026-06-08T15:20:25.729Z">2026-06-08T15:20:25.729Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_01BjimNZrGMLsAeynL8sCNuK">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">Inspect claims-settlement-service component</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:get-catalog-entity --kind Component --name claims-settlement-service --backendUrl http://localhost:7007 2&gt;/dev/null | tail -80</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-20-26-617Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-20-26-617Z" class="timestamp-link"><time datetime="2026-06-08T15:20:26.617Z" data-timestamp="2026-06-08T15:20:26.617Z">2026-06-08T15:20:26.617Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_018uqx6cjXFznNzh9gZ4hWxE">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">Inspect claims-payment-disbursement-service component</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:get-catalog-entity --kind Component --name claims-payment-disbursement-service --backendUrl http://localhost:7007 2&gt;/dev/null | tail -80</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T15-20-26-963Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T15-20-26-963Z" class="timestamp-link"><time datetime="2026-06-08T15:20:26.963Z" data-timestamp="2026-06-08T15:20:26.963Z">2026-06-08T15:20:26.963Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>{
+  &quot;metadata&quot;: {
+    &quot;namespace&quot;: &quot;default&quot;,
+    &quot;annotations&quot;: {
+      &quot;backstage.io/managed-by-location&quot;: &quot;url:https://github.com/benwilcock/backstage-catalogs/tree/dbc1ba9e7589b391cb2c292b964f4a729efb0489/parasol/parasol-catalog-claims.override.yaml&quot;,
+      &quot;backstage.io/managed-by-origin-location&quot;: &quot;url:https://github.com/redhat-developer/rhdh-agentic/blob/main/catalog/parasol-catalog-index.yaml&quot;,
+      &quot;backstage.io/view-url&quot;: &quot;https://github.com/benwilcock/backstage-catalogs/tree/dbc1ba9e7589b391cb2c292b964f4a729efb0489/parasol/parasol-catalog-claims.override.yaml&quot;,
+      &quot;backstage.io/source-location&quot;: &quot;url:https://github.parasol.com/parasol/claims-settlement-service&quot;
+    },
+    &quot;name&quot;: &quot;claims-settlement-service&quot;,
+    &quot;title&quot;: &quot;Claims Settlement Service&quot;,
+    &quot;description&quot;: &quot;Orchestrates the end-to-end settlement of approved claims. Calculates\nnet payable amounts after deductible, excess, co-insurance, and\nsubrogation recoveries. Creates payment instructions and triggers\nclaimant settlement offer communications.\n&quot;,
+    &quot;tags&quot;: [
+      &quot;claims&quot;,
+      &quot;payment&quot;,
+      &quot;finance&quot;,
+      &quot;java&quot;,
+      &quot;rest&quot;
+    ],
+    &quot;links&quot;: [
+      {
+        &quot;url&quot;: &quot;https://confluence.parasol.com/display/CLAIMS/claims-settlement-service&quot;,
+        &quot;title&quot;: &quot;Internal Confluence Docs&quot;,
+        &quot;icon&quot;: &quot;docs&quot;
+      },
+      {
+        &quot;url&quot;: &quot;https://github.parasol.com/parasol/claims-settlement-service&quot;,
+        &quot;title&quot;: &quot;Source Code&quot;,
+        &quot;icon&quot;: &quot;github&quot;
+      }
+    ],
+    &quot;uid&quot;: &quot;fe0a73bf-5d27-4f5e-8ed1-7f5aecfead8e&quot;,
+    &quot;etag&quot;: &quot;e0b48887d6397057e7e43ccad98873d32a956ef2&quot;
+  },
+  &quot;apiVersion&quot;: &quot;backstage.io/v1alpha1&quot;,
+  &quot;kind&quot;: &quot;Component&quot;,
+  &quot;spec&quot;: {
+    &quot;type&quot;: &quot;service&quot;,
+    &quot;lifecycle&quot;: &quot;production&quot;,
+    &quot;owner&quot;: &quot;group:default/claims-engineering&quot;,
+    &quot;system&quot;: &quot;claims-payment-system&quot;,
+    &quot;dependsOn&quot;: [
+      &quot;component:default/bank-account-validation-service&quot;,
+      &quot;component:default/claims-payment-disbursement-service&quot;,
+      &quot;component:default/claims-reserve-calculator&quot;
+    ]
+  },
+  &quot;relations&quot;: [
+    {
+      &quot;type&quot;: &quot;dependencyOf&quot;,
+      &quot;targetRef&quot;: &quot;component:default/settlement-letter-generator&quot;
+    },
+    {
+      &quot;type&quot;: &quot;dependencyOf&quot;,
+      &quot;targetRef&quot;: &quot;component:default/subrogation-recovery-service&quot;
+    },
+    {
+      &quot;type&quot;: &quot;dependsOn&quot;,
+      &quot;targetRef&quot;: &quot;component:default/bank-account-validation-service&quot;
+    },
+    {
+      &quot;type&quot;: &quot;dependsOn&quot;,
+      &quot;targetRef&quot;: &quot;component:default/claims-payment-disbursement-service&quot;
+    },
+    {
+      &quot;type&quot;: &quot;dependsOn&quot;,
+      &quot;targetRef&quot;: &quot;component:default/claims-reserve-calculator&quot;
+    },
+    {
+      &quot;type&quot;: &quot;ownedBy&quot;,
+      &quot;targetRef&quot;: &quot;group:default/claims-engineering&quot;
+    },
+    {
+      &quot;type&quot;: &quot;partOf&quot;,
+      &quot;targetRef&quot;: &quot;system:default/claims-payment-system&quot;
+    }
+  ]
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T15-20-28-206Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T15-20-28-206Z" class="timestamp-link"><time datetime="2026-06-08T15:20:28.206Z" data-timestamp="2026-06-08T15:20:28.206Z">2026-06-08T15:20:28.206Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>{
+  &quot;metadata&quot;: {
+    &quot;namespace&quot;: &quot;default&quot;,
+    &quot;annotations&quot;: {
+      &quot;backstage.io/managed-by-location&quot;: &quot;url:https://github.com/benwilcock/backstage-catalogs/tree/dbc1ba9e7589b391cb2c292b964f4a729efb0489/parasol/parasol-catalog-claims.override.yaml&quot;,
+      &quot;backstage.io/managed-by-origin-location&quot;: &quot;url:https://github.com/redhat-developer/rhdh-agentic/blob/main/catalog/parasol-catalog-index.yaml&quot;,
+      &quot;backstage.io/view-url&quot;: &quot;https://github.com/benwilcock/backstage-catalogs/tree/dbc1ba9e7589b391cb2c292b964f4a729efb0489/parasol/parasol-catalog-claims.override.yaml&quot;,
+      &quot;backstage.io/source-location&quot;: &quot;url:https://github.parasol.com/parasol/claims-payment-disbursement-service&quot;
+    },
+    &quot;name&quot;: &quot;claims-payment-disbursement-service&quot;,
+    &quot;title&quot;: &quot;Claims Payment Disbursement Service&quot;,
+    &quot;description&quot;: &quot;Executes approved claim payment instructions via bank transfer (BACS/\nSEPA/ACH), cheque generation, or digital wallet transfer. Enforces\ndual-control approval for payments exceeding settlement authority limits\nand maintains a full payment audit trail.\n&quot;,
+    &quot;tags&quot;: [
+      &quot;claims&quot;,
+      &quot;payment&quot;,
+      &quot;finance&quot;,
+      &quot;java&quot;,
+      &quot;rest&quot;
+    ],
+    &quot;links&quot;: [
+      {
+        &quot;url&quot;: &quot;https://confluence.parasol.com/display/CLAIMS/claims-payment-disbursement-service&quot;,
+        &quot;title&quot;: &quot;Internal Confluence Docs&quot;,
+        &quot;icon&quot;: &quot;docs&quot;
+      },
+      {
+        &quot;url&quot;: &quot;https://github.parasol.com/parasol/claims-payment-disbursement-service&quot;,
+        &quot;title&quot;: &quot;Source Code&quot;,
+        &quot;icon&quot;: &quot;github&quot;
+      }
+    ],
+    &quot;uid&quot;: &quot;a2ad7cee-d168-4c06-8dc0-e8ad73519123&quot;,
+    &quot;etag&quot;: &quot;e72e9bfa69846169b3a258c2e1189161c3d0a4a4&quot;
+  },
+  &quot;apiVersion&quot;: &quot;backstage.io/v1alpha1&quot;,
+  &quot;kind&quot;: &quot;Component&quot;,
+  &quot;spec&quot;: {
+    &quot;type&quot;: &quot;service&quot;,
+    &quot;lifecycle&quot;: &quot;production&quot;,
+    &quot;owner&quot;: &quot;group:default/claims-engineering&quot;,
+    &quot;system&quot;: &quot;claims-payment-system&quot;,
+    &quot;dependsOn&quot;: [
+      &quot;component:default/bank-account-validation-service&quot;
+    ]
+  },
+  &quot;relations&quot;: [
+    {
+      &quot;type&quot;: &quot;dependencyOf&quot;,
+      &quot;targetRef&quot;: &quot;component:default/claims-settlement-service&quot;
+    },
+    {
+      &quot;type&quot;: &quot;dependsOn&quot;,
+      &quot;targetRef&quot;: &quot;component:default/bank-account-validation-service&quot;
+    },
+    {
+      &quot;type&quot;: &quot;ownedBy&quot;,
+      &quot;targetRef&quot;: &quot;group:default/claims-engineering&quot;
+    },
+    {
+      &quot;type&quot;: &quot;partOf&quot;,
+      &quot;targetRef&quot;: &quot;system:default/claims-payment-system&quot;
+    }
+  ]
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-20-28-577Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-20-28-577Z" class="timestamp-link"><time datetime="2026-06-08T15:20:28.577Z" data-timestamp="2026-06-08T15:20:28.577Z">2026-06-08T15:20:28.577Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_01HQ8ar9xVX45CXp9DvM88Wv">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">List all APIs in catalog</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:query-catalog-entities --query &#39;{&#34;kind&#34;:&#34;API&#34;}&#39; --fields &#39;[&#34;metadata.name&#34;,&#34;metadata.description&#34;,&#34;spec.owner&#34;]&#39; --backendUrl http://localhost:7007 2&gt;/dev/null | tail -100</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T15-20-29-940Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T15-20-29-940Z" class="timestamp-link"><time datetime="2026-06-08T15:20:29.940Z" data-timestamp="2026-06-08T15:20:29.940Z">2026-06-08T15:20:29.940Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>        &quot;description&quot;: &quot;Internal rating API consumed by all quoting services and the renewal\nengine. Calculates gross written premium for all Parasol products\nusing the current filed rate tables and actuarial factors.\n&quot;
+      },
+      &quot;spec&quot;: {
+        &quot;owner&quot;: &quot;group:default/underwriting-engineering&quot;
+      }
+    },
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;fnol-submission-api&quot;,
+        &quot;description&quot;: &quot;Accepts first notice of loss submissions from all channels including the\ncustomer web portal, mobile app, broker portal, and third-party loss\nadjusters. Returns a claim reference number upon successful submission.\n&quot;
+      },
+      &quot;spec&quot;: {
+        &quot;owner&quot;: &quot;group:default/claims-engineering&quot;
+      }
+    },
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;reinsurance-bordereau-api&quot;,
+        &quot;description&quot;: &quot;Internal API used by the bordereau reporting system to extract cession\ndata and submit premium and loss bordereaux to treaty reinsurers.\nProvides endpoints for cession queries, report generation, and\nsubmission status tracking.\n&quot;
+      },
+      &quot;spec&quot;: {
+        &quot;owner&quot;: &quot;group:default/reinsurance-engineering&quot;
+      }
+    },
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;data-catalogue-api&quot;,
+        &quot;description&quot;: &quot;Provides discovery and metadata access to the Parasol enterprise\ndata catalogue. Enables data consumers to search for datasets, view\nlineage, check data quality scores, and request access to certified\ndata products.\n&quot;
+      },
+      &quot;spec&quot;: {
+        &quot;owner&quot;: &quot;group:default/data-analytics-engineering&quot;
+      }
+    },
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;iam-token-api&quot;,
+        &quot;description&quot;: &quot;Issues OAuth 2.0 access tokens and OIDC ID tokens for all internal\nservices and customer-facing applications. Provides JWKS endpoint\nfor token validation, token introspection, and token revocation.\n&quot;
+      },
+      &quot;spec&quot;: {
+        &quot;owner&quot;: &quot;group:default/parasol-platform-engineering&quot;
+      }
+    },
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;audit-log-api&quot;,
+        &quot;description&quot;: &quot;Internal API for submitting and querying the immutable enterprise\naudit log. All Parasol systems must submit security and data access\nevents here for regulatory compliance and forensic investigation.\n&quot;
+      },
+      &quot;spec&quot;: {
+        &quot;owner&quot;: &quot;group:default/compliance-engineering&quot;
+      }
+    },
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;ml-model-inference-api&quot;,
+        &quot;description&quot;: &quot;Provides a unified inference API for all production ML models hosted\non the Parasol model serving platform. Consumers specify the model\nname and version; the platform handles routing, feature fetching,\nand prediction serving.\n&quot;
+      },
+      &quot;spec&quot;: {
+        &quot;owner&quot;: &quot;group:default/data-analytics-engineering&quot;
+      }
+    },
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;fraud-score-api&quot;,
+        &quot;description&quot;: &quot;Returns real-time fraud risk scores for claims and payment transactions.\nConsumed by FNOL triage, adjuster assignment, and payment processing\nservices. Also available to authorised SIU investigators.\n&quot;
+      },
+      &quot;spec&quot;: {
+        &quot;owner&quot;: &quot;group:default/claims-engineering&quot;
+      }
+    },
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;policy-query-api&quot;,
+        &quot;description&quot;: &quot;High-performance read API for policy coverage and schedule data.\nConsumed by the claims system for coverage verification, the customer\nportal for self-service display, the broker portal, and third-party\nloss adjusters. The most widely consumed API in Parasol&#x27;s estate.\n&quot;
+      },
+      &quot;spec&quot;: {
+        &quot;owner&quot;: &quot;group:default/policy-platform-engineering&quot;
+      }
+    },
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;premium-payment-api&quot;,
+        &quot;description&quot;: &quot;Accepts premium payments from the customer web portal, mobile app,\nand third-party payment integrations. Supports card, direct debit\nsetup, and Open Banking account-to-account payments.\n&quot;
+      },
+      &quot;spec&quot;: {
+        &quot;owner&quot;: &quot;group:default/billing-payments-engineering&quot;
+      }
+    },
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;claims-status-api&quot;,
+        &quot;description&quot;: &quot;Provides real-time claim status information to customers, brokers,\nand third-party systems. Returns claim milestones, current handler,\nreserve amounts (internal only), and payment history.\n&quot;
+      },
+      &quot;spec&quot;: {
+        &quot;owner&quot;: &quot;group:default/claims-engineering&quot;
+      }
+    }
+  ],
+  &quot;totalItems&quot;: 16,
+  &quot;hasMoreEntities&quot;: false
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-20-32-904Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-20-32-904Z" class="timestamp-link"><time datetime="2026-06-08T15:20:32.904Z" data-timestamp="2026-06-08T15:20:32.904Z">2026-06-08T15:20:32.904Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>Now let me inspect the audit-log-api since our reconciliation service will need to write audit events.</p></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-20-35-006Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-20-35-006Z" class="timestamp-link"><time datetime="2026-06-08T15:20:35.006Z" data-timestamp="2026-06-08T15:20:35.006Z">2026-06-08T15:20:35.006Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_01Bmm9fszm7q8rQ6rRMGcVBr">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">Inspect audit-log-api entity</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:get-catalog-entity --kind API --name audit-log-api --backendUrl http://localhost:7007 2&gt;/dev/null | tail -60</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T15-20-36-347Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T15-20-36-347Z" class="timestamp-link"><time datetime="2026-06-08T15:20:36.347Z" data-timestamp="2026-06-08T15:20:36.347Z">2026-06-08T15:20:36.347Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>{
+  &quot;metadata&quot;: {
+    &quot;namespace&quot;: &quot;default&quot;,
+    &quot;annotations&quot;: {
+      &quot;backstage.io/managed-by-location&quot;: &quot;url:https://github.com/benwilcock/backstage-catalogs/tree/dbc1ba9e7589b391cb2c292b964f4a729efb0489/parasol/parasol-catalog-apis.override.yaml&quot;,
+      &quot;backstage.io/managed-by-origin-location&quot;: &quot;url:https://github.com/redhat-developer/rhdh-agentic/blob/main/catalog/parasol-catalog-index.yaml&quot;,
+      &quot;backstage.io/view-url&quot;: &quot;https://github.com/benwilcock/backstage-catalogs/tree/dbc1ba9e7589b391cb2c292b964f4a729efb0489/parasol/parasol-catalog-apis.override.yaml&quot;,
+      &quot;backstage.io/source-location&quot;: &quot;url:https://github.parasol.com/parasol/immutable-audit-log-service&quot;
+    },
+    &quot;name&quot;: &quot;audit-log-api&quot;,
+    &quot;title&quot;: &quot;Audit Log API&quot;,
+    &quot;description&quot;: &quot;Internal API for submitting and querying the immutable enterprise\naudit log. All Parasol systems must submit security and data access\nevents here for regulatory compliance and forensic investigation.\n&quot;,
+    &quot;tags&quot;: [
+      &quot;compliance-regulatory&quot;,
+      &quot;audit&quot;,
+      &quot;security&quot;,
+      &quot;internal-api&quot;
+    ],
+    &quot;uid&quot;: &quot;7b6ef173-10b5-442f-9923-3e367cbd49cf&quot;,
+    &quot;etag&quot;: &quot;afe44e766138e9aac1230d39f3424ca23cd520c5&quot;
+  },
+  &quot;apiVersion&quot;: &quot;backstage.io/v1alpha1&quot;,
+  &quot;kind&quot;: &quot;API&quot;,
+  &quot;spec&quot;: {
+    &quot;type&quot;: &quot;openapi&quot;,
+    &quot;lifecycle&quot;: &quot;production&quot;,
+    &quot;owner&quot;: &quot;group:default/compliance-engineering&quot;,
+    &quot;system&quot;: &quot;audit-trail-system&quot;,
+    &quot;definition&quot;: &quot;openapi: \&quot;3.0.3\&quot;\ninfo:\n  title: Audit Log API\n  version: \&quot;1.0.0\&quot;\n  description: Append-only audit event submission and query interface.\nservers:\n  - url: https://api-internal.parasol.com/compliance/audit/v1\npaths:\n  /events:\n    post:\n      summary: Submit one or more audit events\n      operationId: submitAuditEvents\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: \&quot;#/components/schemas/AuditEventBatch\&quot;\n      responses:\n        \&quot;204\&quot;:\n          description: Events accepted\n        \&quot;400\&quot;:\n          description: Invalid event format\n    get:\n      summary: Query audit events\n      operationId: queryAuditEvents\n      parameters:\n        - name: subjectId\n          in: query\n          schema:\n            type: string\n        - name: eventType\n          in: query\n          schema:\n            type: string\n        - name: from\n          in: query\n          schema:\n            type: string\n            format: date-time\n        - name: to\n          in: query\n          schema:\n            type: string\n            format: date-time\n      responses:\n        \&quot;200\&quot;:\n          description: Matching audit events\ncomponents:\n  schemas:\n    AuditEventBatch:\n      type: object\n      required: [events]\n      properties:\n        events:\n          type: array\n          items:\n            type: object\n            required: [timestamp, eventType, actorId, subjectId]\n            properties:\n              timestamp:\n                type: string\n                format: date-time\n              eventType:\n                type: string\n              actorId:\n                type: string\n              subjectId:\n                type: string\n              resourceType:\n                type: string\n              outcome:\n                type: string\n                enum: [SUCCESS, FAILURE, DENIED]\n&quot;
+  },
+  &quot;relations&quot;: [
+    {
+      &quot;type&quot;: &quot;ownedBy&quot;,
+      &quot;targetRef&quot;: &quot;group:default/compliance-engineering&quot;
+    },
+    {
+      &quot;type&quot;: &quot;partOf&quot;,
+      &quot;targetRef&quot;: &quot;system:default/audit-trail-system&quot;
+    }
+  ]
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-20-49-121Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-20-49-121Z" class="timestamp-link"><time datetime="2026-06-08T15:20:49.121Z" data-timestamp="2026-06-08T15:20:49.121Z">2026-06-08T15:20:49.121Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p><code>★ Insight ─────────────────────────────────────</code>
+<strong>Phase 3 — Integration Map:</strong></p>
+<p>The dependency graph for the payment reconciliation service is now clear:</p>
+<p><strong>Upstream (data sources):</strong>
+- <code>claims-settlement-service</code> — calculates net payable amounts, creates payment instructions. Depends on <code>bank-account-validation-service</code>, <code>claims-payment-disbursement-service</code>, and <code>claims-reserve-calculator</code>.
+- <code>claims-payment-disbursement-service</code> — executes payments via BACS/SEPA/ACH, cheque, or digital wallet. Enforces <strong>dual-control approval</strong> above thresholds. Has full payment audit trail.</p>
+<p><strong>Cross-cutting APIs our service must consume:</strong>
+- <code>audit-log-api</code> (compliance-engineering) — append-only, immutable audit log. OpenAPI 3.0.3 with batch event submission. Our service <strong>MUST</strong> submit reconciliation events here.
+- <code>claims-status-api</code> — for payment history on claims
+- <code>fraud-score-api</code> — if reconciliation detects anomalies, it can cross-reference fraud scores
+- <code>premium-payment-api</code> (billing-payments-engineering) — the Billing domain's payment API, needed if reconciling premium vs. claim payments</p>
+<p><strong>Key API detail:</strong> The <code>audit-log-api</code> has a concrete OpenAPI spec embedded in the catalog entity — a real <code>POST /events</code> endpoint at <code>api-internal.parasol.com/compliance/audit/v1</code>. Every audit event requires <code>timestamp</code>, <code>eventType</code>, <code>actorId</code>, <code>subjectId</code>, with an optional <code>outcome</code> enum of <code>SUCCESS | FAILURE | DENIED</code>.
+<code>─────────────────────────────────────────────────</code></p>
+<h2>Phase 4: Select the right template</h2></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-20-51-893Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-20-51-893Z" class="timestamp-link"><time datetime="2026-06-08T15:20:51.893Z" data-timestamp="2026-06-08T15:20:51.893Z">2026-06-08T15:20:51.893Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_019GgTf1b4AU18uFR4mQHD87">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">List all available templates</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:query-catalog-entities --query &#39;{&#34;kind&#34;:&#34;Template&#34;}&#39; --fields &#39;[&#34;metadata.name&#34;,&#34;metadata.description&#34;,&#34;metadata.tags&#34;]&#39; --backendUrl http://localhost:7007 2&gt;/dev/null | tail -100</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T15-20-53-124Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T15-20-53-124Z" class="timestamp-link"><time datetime="2026-06-08T15:20:53.124Z" data-timestamp="2026-06-08T15:20:53.124Z">2026-06-08T15:20:53.124Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>{
+  &quot;items&quot;: [
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;parasol-python-service&quot;,
+        &quot;description&quot;: &quot;Scaffold a new Python service for Parasol Insurance data-oriented domains.\nUse for Data &amp; Analytics, ML pipelines, and actuarial workloads. Produces\na FastAPI project with health checks, Prometheus metrics, OpenTelemetry\ntracing, and a valid catalog-info.yaml.\n&quot;,
+        &quot;tags&quot;: [
+          &quot;python&quot;,
+          &quot;fastapi&quot;,
+          &quot;rest&quot;,
+          &quot;parasol&quot;,
+          &quot;data&quot;
+        ]
+      }
+    },
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;parasol-nodejs-service&quot;,
+        &quot;description&quot;: &quot;Scaffold a new Node.js service for Parasol Insurance digital channels.\nUse for BFF (Backend-for-Frontend) services, push notification handlers,\nreal-time messaging, and broker portal APIs. Produces an Express.js project\nwith health checks, Prometheus metrics, OpenTelemetry tracing, and a valid\ncatalog-info.yaml.\n&quot;,
+        &quot;tags&quot;: [
+          &quot;nodejs&quot;,
+          &quot;express&quot;,
+          &quot;rest&quot;,
+          &quot;parasol&quot;,
+          &quot;bff&quot;
+        ]
+      }
+    },
+    {
+      &quot;metadata&quot;: {
+        &quot;name&quot;: &quot;parasol-quarkus-service&quot;,
+        &quot;description&quot;: &quot;Scaffold a new Quarkus microservice for Parasol Insurance domains.\nUse for Claims, Underwriting, Policy Administration, Billing, and other\nJava-dominant domains. Produces a Maven project with REST endpoint,\nhealth checks, metrics, and a valid catalog-info.yaml.\n&quot;,
+        &quot;tags&quot;: [
+          &quot;java&quot;,
+          &quot;quarkus&quot;,
+          &quot;rest&quot;,
+          &quot;parasol&quot;,
+          &quot;recommended&quot;
+        ]
+      }
+    }
+  ],
+  &quot;totalItems&quot;: 3,
+  &quot;hasMoreEntities&quot;: false
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-20-56-194Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-20-56-194Z" class="timestamp-link"><time datetime="2026-06-08T15:20:56.194Z" data-timestamp="2026-06-08T15:20:56.194Z">2026-06-08T15:20:56.194Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_01LBJq3Jp6SHPRqzYjyPUcTs">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">Inspect the Quarkus service template</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute catalog:get-catalog-entity --kind Template --name parasol-quarkus-service --backendUrl http://localhost:7007 2&gt;/dev/null | tail -120</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T15-20-57-353Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T15-20-57-353Z" class="timestamp-link"><time datetime="2026-06-08T15:20:57.353Z" data-timestamp="2026-06-08T15:20:57.353Z">2026-06-08T15:20:57.353Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>            &quot;pattern&quot;: &quot;^[a-z][a-z0-9-]*$&quot;,
+            &quot;ui:autofocus&quot;: true
+          },
+          &quot;description&quot;: {
+            &quot;title&quot;: &quot;Description&quot;,
+            &quot;type&quot;: &quot;string&quot;,
+            &quot;description&quot;: &quot;What does this service do?&quot;
+          },
+          &quot;owner&quot;: {
+            &quot;title&quot;: &quot;Owner&quot;,
+            &quot;type&quot;: &quot;string&quot;,
+            &quot;description&quot;: &quot;The team that owns this service&quot;,
+            &quot;ui:field&quot;: &quot;EntityPicker&quot;,
+            &quot;ui:options&quot;: {
+              &quot;catalogFilter&quot;: {
+                &quot;kind&quot;: [
+                  &quot;Group&quot;
+                ]
+              }
+            }
+          },
+          &quot;system&quot;: {
+            &quot;title&quot;: &quot;System&quot;,
+            &quot;type&quot;: &quot;string&quot;,
+            &quot;description&quot;: &quot;The Parasol system this service belongs to&quot;,
+            &quot;ui:field&quot;: &quot;EntityPicker&quot;,
+            &quot;ui:options&quot;: {
+              &quot;catalogFilter&quot;: {
+                &quot;kind&quot;: [
+                  &quot;System&quot;
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        &quot;title&quot;: &quot;Java Configuration&quot;,
+        &quot;required&quot;: [
+          &quot;groupId&quot;,
+          &quot;artifactId&quot;,
+          &quot;javaPackageName&quot;
+        ],
+        &quot;properties&quot;: {
+          &quot;groupId&quot;: {
+            &quot;title&quot;: &quot;Group ID&quot;,
+            &quot;type&quot;: &quot;string&quot;,
+            &quot;default&quot;: &quot;com.parasol&quot;,
+            &quot;description&quot;: &quot;Maven group ID&quot;
+          },
+          &quot;artifactId&quot;: {
+            &quot;title&quot;: &quot;Artifact ID&quot;,
+            &quot;type&quot;: &quot;string&quot;,
+            &quot;description&quot;: &quot;Maven artifact ID (defaults to service name)&quot;
+          },
+          &quot;javaPackageName&quot;: {
+            &quot;title&quot;: &quot;Java Package&quot;,
+            &quot;type&quot;: &quot;string&quot;,
+            &quot;default&quot;: &quot;com.parasol&quot;,
+            &quot;description&quot;: &quot;Base Java package name&quot;
+          },
+          &quot;port&quot;: {
+            &quot;title&quot;: &quot;Port&quot;,
+            &quot;type&quot;: &quot;number&quot;,
+            &quot;default&quot;: 8080,
+            &quot;description&quot;: &quot;HTTP port for the service&quot;
+          }
+        }
+      }
+    ],
+    &quot;steps&quot;: [
+      {
+        &quot;id&quot;: &quot;template&quot;,
+        &quot;name&quot;: &quot;Fetch Service Skeleton&quot;,
+        &quot;action&quot;: &quot;fetch:template&quot;,
+        &quot;input&quot;: {
+          &quot;url&quot;: &quot;./skeleton&quot;,
+          &quot;values&quot;: {
+            &quot;name&quot;: &quot;${{ parameters.name }}&quot;,
+            &quot;description&quot;: &quot;${{ parameters.description }}&quot;,
+            &quot;groupId&quot;: &quot;${{ parameters.groupId }}&quot;,
+            &quot;artifactId&quot;: &quot;${{ parameters.artifactId }}&quot;,
+            &quot;javaPackageName&quot;: &quot;${{ parameters.javaPackageName }}&quot;,
+            &quot;port&quot;: &quot;${{ parameters.port }}&quot;
+          }
+        }
+      },
+      {
+        &quot;id&quot;: &quot;catalogTemplate&quot;,
+        &quot;name&quot;: &quot;Fetch Catalog Info&quot;,
+        &quot;action&quot;: &quot;fetch:template&quot;,
+        &quot;input&quot;: {
+          &quot;url&quot;: &quot;../skeletons/catalog-info/&quot;,
+          &quot;values&quot;: {
+            &quot;name&quot;: &quot;${{ parameters.name }}&quot;,
+            &quot;description&quot;: &quot;${{ parameters.description }}&quot;,
+            &quot;owner&quot;: &quot;${{ parameters.owner }}&quot;,
+            &quot;system&quot;: &quot;${{ parameters.system }}&quot;,
+            &quot;stack&quot;: &quot;java&quot;
+          }
+        }
+      }
+    ],
+    &quot;output&quot;: {
+      &quot;links&quot;: [
+        {
+          &quot;title&quot;: &quot;Service Skeleton&quot;,
+          &quot;icon&quot;: &quot;catalog&quot;,
+          &quot;entityRef&quot;: &quot;${{ steps.catalogTemplate.output.entityRef }}&quot;
+        }
+      ]
+    }
+  },
+  &quot;relations&quot;: [
+    {
+      &quot;type&quot;: &quot;ownedBy&quot;,
+      &quot;targetRef&quot;: &quot;group:default/parasol-platform-engineering&quot;
+    }
+  ]
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T15-21-32-195Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T15-21-32-195Z" class="timestamp-link"><time datetime="2026-06-08T15:21:32.195Z" data-timestamp="2026-06-08T15:21:32.195Z">2026-06-08T15:21:32.195Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p><code>★ Insight ─────────────────────────────────────</code>
+<strong>Phase 4 — Template Selection:</strong></p>
+<p>Three templates are available: <code>parasol-python-service</code> (FastAPI), <code>parasol-nodejs-service</code> (Express), and <code>parasol-quarkus-service</code> (Quarkus/Java).</p>
+<p>The choice is <strong>unambiguous</strong>: <code>parasol-quarkus-service</code>. Both domains mandate Java/Quarkus for transactional services. Python is restricted to batch/ML workloads, Node.js to I/O-bound non-transactional work. A payment reconciliation service is squarely transactional.</p>
+<p>The template scaffolds a Maven project with REST endpoint, health checks, metrics, and a <code>catalog-info.yaml</code> — and accepts parameters for <code>owner</code>, <code>system</code>, <code>groupId</code>, <code>artifactId</code>, <code>javaPackageName</code>, and <code>port</code>.
+<code>─────────────────────────────────────────────────</code></p>
+<hr />
+<h2>Technology Decision Summary: <code>payment-reconciliation-service</code></h2>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Choice</th>
+<th>Catalog Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Template</strong></td>
+<td><code>parasol-quarkus-service</code></td>
+<td>Template catalog — tagged <code>recommended</code>, only Java template</td>
+</tr>
+<tr>
+<td><strong>Language / Framework</strong></td>
+<td>Java / Quarkus</td>
+<td>Claims handbook: "All new claims services MUST be written in Java using Quarkus"; Billing handbook: "All new services MUST use Quarkus"</td>
+</tr>
+<tr>
+<td><strong>Platform</strong></td>
+<td>OpenShift 4</td>
+<td>Both domains: "Required — All"</td>
+</tr>
+<tr>
+<td><strong>Owner</strong></td>
+<td><code>claims-engineering</code></td>
+<td><code>claims-payment-system</code> owner; the service lives in the Claims domain</td>
+</tr>
+<tr>
+<td><strong>System</strong></td>
+<td><code>claims-payment-system</code></td>
+<td>Domain:claims → System with payment components</td>
+</tr>
+<tr>
+<td><strong>API Style</strong></td>
+<td>REST / OpenAPI 3.0.3</td>
+<td>Claims handbook: "All synchronous service interfaces must use REST with OpenAPI specs"</td>
+</tr>
+<tr>
+<td><strong>Auth</strong></td>
+<td>Keycloak (OAuth 2.0 / OIDC)</td>
+<td>Both domains: Required</td>
+</tr>
+<tr>
+<td><strong>Observability</strong></td>
+<td>Instana (APM + distributed tracing)</td>
+<td>Both domains: Required; Claims SLO: p99 &lt; 500ms</td>
+</tr>
+<tr>
+<td><strong>Security Scanning</strong></td>
+<td>Red Hat ACS</td>
+<td>Both domains: Required</td>
+</tr>
+<tr>
+<td><strong>Audit</strong></td>
+<td><code>audit-log-api</code> (POST /events)</td>
+<td>Compliance domain; all Parasol systems must submit events</td>
+</tr>
+<tr>
+<td><strong>Database</strong></td>
+<td>PostgreSQL (default) or Db2</td>
+<td>Claims handbook standard; deviation requires approval</td>
+</tr>
+<tr>
+<td><strong>Ledger tag</strong></td>
+<td>Yes → double-entry accounting + immutable audit logs</td>
+<td>Billing handbook rule 9: "Components tagged <code>ledger</code> MUST implement double-entry accounting"</td>
+</tr>
+</tbody>
+</table>
+<h3>Cross-Domain Conflict: Messaging</h3>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Claims Domain</th>
+<th>Billing &amp; Payments Domain</th>
+<th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Messaging broker</strong></td>
+<td>AMQ Streams (Kafka) — <em>Preferred</em> for claim lifecycle events</td>
+<td>IBM MQ — <em>Required</em> for payment flows; Kafka "not approved for payment-critical paths"</td>
+<td><strong>Dual-broker pattern</strong>: consume claim events from Kafka (Claims mandate), but use IBM MQ for any payment-touching message flows (Billing mandate). The Billing handbook provides an explicit carve-out: reconciliation batch jobs that do not handle cardholder data <em>may</em> use Kafka with approval.</td>
+</tr>
+<tr>
+<td><strong>PCI-DSS scope</strong></td>
+<td>Not mentioned</td>
+<td>PCI-DSS Level 1 if handling cardholder data; Guardium required</td>
+<td><strong>Design the service to NOT handle cardholder data</strong> (use tokenized references only). This keeps it out of PCI-DSS scope and avoids Guardium overhead + annual QSA audit.</td>
+</tr>
+</tbody>
+</table>
+<h3>Recommended Template Parameters</h3>
+<pre><code>name:             payment-reconciliation-service
+description:      Reconciles claim settlement payment instructions against
+                  disbursement confirmations. Detects discrepancies, generates
+                  audit events, and produces reconciliation reports.
+owner:            group:default/claims-engineering
+system:           system:default/claims-payment-system
+groupId:          com.parasol
+artifactId:       payment-reconciliation-service
+javaPackageName:  com.parasol.claims.reconciliation
+port:             8080
+</code></pre>
+<h3>Integration Dependencies</h3>
+<pre><code>dependsOn:
+  - component:default/claims-settlement-service    # payment instructions
+  - component:default/claims-payment-disbursement-service  # disbursement confirmations
+consumesApis:
+  - audit-log-api          # compliance events
+  - claims-status-api      # payment history lookup
+</code></pre>
+<h3>Tags</h3>
+<pre><code class="language-yaml">tags: [claims, payment, finance, reconciliation, ledger, java, rest]
+</code></pre>
+<p><code>★ Insight ─────────────────────────────────────</code>
+<strong>Key architectural takeaway:</strong> The most consequential discovery from this catalog exploration is the <strong>messaging conflict between domains</strong>. In a real enterprise, this is exactly the kind of cross-domain governance tension that the Backstage catalog is designed to surface <em>before</em> you start writing code. Without reading both handbooks, a developer might pick Kafka (the Claims default) for payment messages and violate the Billing domain's governance — a compliance risk that would only surface during security review or, worse, a PCI-DSS audit. The catalog-as-code pattern turns architecture governance from tribal knowledge into queryable, discoverable policy.
+<code>─────────────────────────────────────────────────</code></p></div></div></div>
+        
+
+<div class="pagination"><a href="index.html" class="index-link">Index</a></div>
+
+    </div>
+    <script>
+document.querySelectorAll('time[data-timestamp]').forEach(function(el) {
+    const timestamp = el.getAttribute('data-timestamp');
+    const date = new Date(timestamp);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    const timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    if (isToday) { el.textContent = timeStr; }
+    else { el.textContent = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + timeStr; }
+});
+document.querySelectorAll('pre.json').forEach(function(el) {
+    let text = el.textContent;
+    text = text.replace(/"([^"]+)":/g, '<span style="color: #ce93d8">"$1"</span>:');
+    text = text.replace(/: "([^"]*)"/g, ': <span style="color: #81d4fa">"$1"</span>');
+    text = text.replace(/: (\d+)/g, ': <span style="color: #ffcc80">$1</span>');
+    text = text.replace(/: (true|false|null)/g, ': <span style="color: #f48fb1">$1</span>');
+    el.innerHTML = text;
+});
+document.querySelectorAll('.truncatable').forEach(function(wrapper) {
+    const content = wrapper.querySelector('.truncatable-content');
+    const btn = wrapper.querySelector('.expand-btn');
+    if (content.scrollHeight > 250) {
+        wrapper.classList.add('truncated');
+        btn.addEventListener('click', function() {
+            if (wrapper.classList.contains('truncated')) { wrapper.classList.remove('truncated'); wrapper.classList.add('expanded'); btn.textContent = 'Show less'; }
+            else { wrapper.classList.remove('expanded'); wrapper.classList.add('truncated'); btn.textContent = 'Show more'; }
+        });
+    }
+});
+</script>
+</body>
+</html>

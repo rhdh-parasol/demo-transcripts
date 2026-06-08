@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code transcript - page 1</title>
+    <style>
+:root { --bg-color: #f5f5f5; --card-bg: #ffffff; --user-bg: #e3f2fd; --user-border: #1976d2; --assistant-bg: #f5f5f5; --assistant-border: #9e9e9e; --thinking-bg: #fff8e1; --thinking-border: #ffc107; --thinking-text: #666; --tool-bg: #f3e5f5; --tool-border: #9c27b0; --tool-result-bg: #e8f5e9; --tool-error-bg: #ffebee; --text-color: #212121; --text-muted: #757575; --code-bg: #263238; --code-text: #aed581; }
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 16px; line-height: 1.6; }
+.container { max-width: 800px; margin: 0 auto; }
+h1 { font-size: 1.5rem; margin-bottom: 24px; padding-bottom: 8px; border-bottom: 2px solid var(--user-border); }
+.header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid var(--user-border); padding-bottom: 8px; margin-bottom: 24px; }
+.header-row h1 { border-bottom: none; padding-bottom: 0; margin-bottom: 0; flex: 1; min-width: 200px; }
+.message { margin-bottom: 16px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.message.user { background: var(--user-bg); border-left: 4px solid var(--user-border); }
+.message.assistant { background: var(--card-bg); border-left: 4px solid var(--assistant-border); }
+.message.tool-reply { background: #fff8e1; border-left: 4px solid #ff9800; }
+.tool-reply .role-label { color: #e65100; }
+.tool-reply .tool-result { background: transparent; padding: 0; margin: 0; }
+.tool-reply .tool-result .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #fff8e1); }
+.message-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; background: rgba(0,0,0,0.03); font-size: 0.85rem; }
+.role-label { font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.user .role-label { color: var(--user-border); }
+time { color: var(--text-muted); font-size: 0.8rem; }
+.timestamp-link { color: inherit; text-decoration: none; }
+.timestamp-link:hover { text-decoration: underline; }
+.message:target { animation: highlight 2s ease-out; }
+@keyframes highlight { 0% { background-color: rgba(25, 118, 210, 0.2); } 100% { background-color: transparent; } }
+.message-content { padding: 16px; }
+.message-content p { margin: 0 0 12px 0; }
+.message-content p:last-child { margin-bottom: 0; }
+.thinking { background: var(--thinking-bg); border: 1px solid var(--thinking-border); border-radius: 8px; padding: 12px; margin: 12px 0; font-size: 0.9rem; color: var(--thinking-text); }
+.thinking-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #f57c00; margin-bottom: 8px; }
+.thinking p { margin: 8px 0; }
+.assistant-text { margin: 8px 0; }
+.tool-use { background: var(--tool-bg); border: 1px solid var(--tool-border); border-radius: 8px; padding: 12px; margin: 12px 0; }
+.tool-header { font-weight: 600; color: var(--tool-border); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.tool-icon { font-size: 1.1rem; }
+.tool-description { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px; font-style: italic; }
+.tool-result { background: var(--tool-result-bg); border-radius: 8px; padding: 12px; margin: 12px 0; }
+.tool-result.tool-error { background: var(--tool-error-bg); }
+.file-tool { border-radius: 8px; padding: 12px; margin: 12px 0; }
+.write-tool { background: linear-gradient(135deg, #e3f2fd 0%, #e8f5e9 100%); border: 1px solid #4caf50; }
+.edit-tool { background: linear-gradient(135deg, #fff3e0 0%, #fce4ec 100%); border: 1px solid #ff9800; }
+.file-tool-header { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+.write-header { color: #2e7d32; }
+.edit-header { color: #e65100; }
+.file-tool-icon { font-size: 1rem; }
+.file-tool-path { font-family: monospace; background: rgba(0,0,0,0.08); padding: 2px 8px; border-radius: 4px; }
+.file-tool-fullpath { font-family: monospace; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; word-break: break-all; }
+.file-content { margin: 0; }
+.edit-section { display: flex; margin: 4px 0; border-radius: 4px; overflow: hidden; }
+.edit-label { padding: 8px 12px; font-weight: bold; font-family: monospace; display: flex; align-items: flex-start; }
+.edit-old { background: #fce4ec; }
+.edit-old .edit-label { color: #b71c1c; background: #f8bbd9; }
+.edit-old .edit-content { color: #880e4f; }
+.edit-new { background: #e8f5e9; }
+.edit-new .edit-label { color: #1b5e20; background: #a5d6a7; }
+.edit-new .edit-content { color: #1b5e20; }
+.edit-content { margin: 0; flex: 1; background: transparent; font-size: 0.85rem; }
+.edit-replace-all { font-size: 0.75rem; font-weight: normal; color: var(--text-muted); }
+.write-tool .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #e6f4ea); }
+.edit-tool .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #fff0e5); }
+.todo-list { background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%); border: 1px solid #81c784; border-radius: 8px; padding: 12px; margin: 12px 0; }
+.todo-header { font-weight: 600; color: #2e7d32; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+.todo-items { list-style: none; margin: 0; padding: 0; }
+.todo-item { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.06); font-size: 0.9rem; }
+.todo-item:last-child { border-bottom: none; }
+.todo-icon { flex-shrink: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 50%; }
+.todo-completed .todo-icon { color: #2e7d32; background: rgba(46, 125, 50, 0.15); }
+.todo-completed .todo-content { color: #558b2f; text-decoration: line-through; }
+.todo-in-progress .todo-icon { color: #f57c00; background: rgba(245, 124, 0, 0.15); }
+.todo-in-progress .todo-content { color: #e65100; font-weight: 500; }
+.todo-pending .todo-icon { color: #757575; background: rgba(0,0,0,0.05); }
+.todo-pending .todo-content { color: #616161; }
+pre { background: var(--code-bg); color: var(--code-text); padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; margin: 8px 0; white-space: pre-wrap; word-wrap: break-word; }
+pre.json { color: #e0e0e0; }
+code { background: rgba(0,0,0,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+pre code { background: none; padding: 0; }
+.user-content { margin: 0; }
+.truncatable { position: relative; }
+.truncatable.truncated .truncatable-content { max-height: 200px; overflow: hidden; }
+.truncatable.truncated::after { content: ''; position: absolute; bottom: 32px; left: 0; right: 0; height: 60px; background: linear-gradient(to bottom, transparent, var(--card-bg)); pointer-events: none; }
+.message.user .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--user-bg)); }
+.message.tool-reply .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #fff8e1); }
+.tool-use .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--tool-bg)); }
+.tool-result .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--tool-result-bg)); }
+.expand-btn { display: none; width: 100%; padding: 8px 16px; margin-top: 4px; background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); border-radius: 6px; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); }
+.expand-btn:hover { background: rgba(0,0,0,0.1); }
+.truncatable.truncated .expand-btn, .truncatable.expanded .expand-btn { display: block; }
+.pagination { display: flex; justify-content: center; gap: 8px; margin: 24px 0; flex-wrap: wrap; }
+.pagination a, .pagination span { padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; }
+.pagination a { background: var(--card-bg); color: var(--user-border); border: 1px solid var(--user-border); }
+.pagination a:hover { background: var(--user-bg); }
+.pagination .current { background: var(--user-border); color: white; }
+.pagination .disabled { color: var(--text-muted); border: 1px solid #ddd; }
+.pagination .index-link { background: var(--user-border); color: white; }
+details.continuation { margin-bottom: 16px; }
+details.continuation summary { cursor: pointer; padding: 12px 16px; background: var(--user-bg); border-left: 4px solid var(--user-border); border-radius: 12px; font-weight: 500; color: var(--text-muted); }
+details.continuation summary:hover { background: rgba(25, 118, 210, 0.15); }
+details.continuation[open] summary { border-radius: 12px 12px 0 0; margin-bottom: 0; }
+.index-item { margin-bottom: 16px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background: var(--user-bg); border-left: 4px solid var(--user-border); }
+.index-item a { display: block; text-decoration: none; color: inherit; }
+.index-item a:hover { background: rgba(25, 118, 210, 0.1); }
+.index-item-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; background: rgba(0,0,0,0.03); font-size: 0.85rem; }
+.index-item-number { font-weight: 600; color: var(--user-border); }
+.index-item-content { padding: 16px; }
+.index-item-stats { padding: 8px 16px 12px 32px; font-size: 0.85rem; color: var(--text-muted); border-top: 1px solid rgba(0,0,0,0.06); }
+.index-item-commit { margin-top: 6px; padding: 4px 8px; background: #fff3e0; border-radius: 4px; font-size: 0.85rem; color: #e65100; }
+.index-item-commit code { background: rgba(0,0,0,0.08); padding: 1px 4px; border-radius: 3px; font-size: 0.8rem; margin-right: 6px; }
+.commit-card { margin: 8px 0; padding: 10px 14px; background: #fff3e0; border-left: 4px solid #ff9800; border-radius: 6px; }
+.commit-card a { text-decoration: none; color: #5d4037; display: block; }
+.commit-card a:hover { color: #e65100; }
+.commit-card-hash { font-family: monospace; color: #e65100; font-weight: 600; margin-right: 8px; }
+.index-commit { margin-bottom: 12px; padding: 10px 16px; background: #fff3e0; border-left: 4px solid #ff9800; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.index-commit a { display: block; text-decoration: none; color: inherit; }
+.index-commit a:hover { background: rgba(255, 152, 0, 0.1); margin: -10px -16px; padding: 10px 16px; border-radius: 8px; }
+.index-commit-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; margin-bottom: 4px; }
+.index-commit-hash { font-family: monospace; color: #e65100; font-weight: 600; }
+.index-commit-msg { color: #5d4037; }
+.index-item-long-text { margin-top: 8px; padding: 12px; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--assistant-border); }
+.index-item-long-text .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--card-bg)); }
+.index-item-long-text-content { color: var(--text-color); }
+#search-box { display: none; align-items: center; gap: 8px; }
+#search-box input { padding: 6px 12px; border: 1px solid var(--assistant-border); border-radius: 6px; font-size: 16px; width: 180px; }
+#search-box button, #modal-search-btn, #modal-close-btn { background: var(--user-border); color: white; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+#search-box button:hover, #modal-search-btn:hover { background: #1565c0; }
+#modal-close-btn { background: var(--text-muted); margin-left: 8px; }
+#modal-close-btn:hover { background: #616161; }
+#search-modal[open] { border: none; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.2); padding: 0; width: 90vw; max-width: 900px; height: 80vh; max-height: 80vh; display: flex; flex-direction: column; }
+#search-modal::backdrop { background: rgba(0,0,0,0.5); }
+.search-modal-header { display: flex; align-items: center; gap: 8px; padding: 16px; border-bottom: 1px solid var(--assistant-border); background: var(--bg-color); border-radius: 12px 12px 0 0; }
+.search-modal-header input { flex: 1; padding: 8px 12px; border: 1px solid var(--assistant-border); border-radius: 6px; font-size: 16px; }
+#search-status { padding: 8px 16px; font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid rgba(0,0,0,0.06); }
+#search-results { flex: 1; overflow-y: auto; padding: 16px; }
+.search-result { margin-bottom: 16px; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.search-result a { display: block; text-decoration: none; color: inherit; }
+.search-result a:hover { background: rgba(25, 118, 210, 0.05); }
+.search-result-page { padding: 6px 12px; background: rgba(0,0,0,0.03); font-size: 0.8rem; color: var(--text-muted); border-bottom: 1px solid rgba(0,0,0,0.06); }
+.search-result-content { padding: 12px; }
+.search-result mark { background: #fff59d; padding: 1px 2px; border-radius: 2px; }
+@media (max-width: 600px) { body { padding: 8px; } .message, .index-item { border-radius: 8px; } .message-content, .index-item-content { padding: 12px; } pre { font-size: 0.8rem; padding: 8px; } #search-box input { width: 120px; } #search-modal[open] { width: 95vw; height: 90vh; } }
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1><a href="index.html" style="color: inherit; text-decoration: none;">Claude Code transcript</a> - page 1/1</h1>
+        
+
+<div class="pagination"><a href="index.html" class="index-link">Index</a></div>
+
+        
+<div class="message user" id="msg-2026-06-08T14-46-12-888Z"><div class="message-header"><span class="role-label">User</span><a href="#msg-2026-06-08T14-46-12-888Z" class="timestamp-link"><time datetime="2026-06-08T14:46:12.888Z" data-timestamp="2026-06-08T14:46:12.888Z">2026-06-08T14:46:12.888Z</time></a></div><div class="message-content">
+<div class="user-content"><p>You are a coding agent about to build a payment reconciliation service for Parasol Insurance. You have already discovered the Claims domain and identified the claims-payment-system as the target system (Phase 1).</p>
+<p>Now you need to learn the technology requirements by reading the domain handbooks via TechDocs.</p>
+<p>Use backstage-cli to:
+1. First, list all entities that have TechDocs available:
+   NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute techdocs-mcp-extras:fetch-techdocs --backendUrl http://localhost:7007</p>
+<ol>
+<li>
+<p>Read the Claims domain handbook:
+   NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute techdocs-mcp-extras:retrieve-techdocs-content --entityRef domain:default/claims --backendUrl http://localhost:7007</p>
+</li>
+<li>
+<p>Read the Billing &amp; Payments domain handbook (your reconciliation service touches payment data, so this domain's rules apply too):
+   NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute techdocs-mcp-extras:retrieve-techdocs-content --entityRef domain:default/billing-payments --backendUrl http://localhost:7007</p>
+</li>
+</ol>
+<p>After reading each handbook, extract and reason about:
+- What technology stack is required for your new service?
+- What messaging system must you use?
+- Are there any cross-domain constraints that affect your design?
+- What compliance requirements apply?</p>
+<p>Pay special attention to any conflict between the Claims domain's messaging preferences and the Billing domain's messaging requirements. This is the critical insight.</p>
+<p>Summarize your findings as the agent's technology decision matrix for the new reconciliation service.</p></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T14-46-19-703Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T14-46-19-703Z" class="timestamp-link"><time datetime="2026-06-08T14:46:19.703Z" data-timestamp="2026-06-08T14:46:19.703Z">2026-06-08T14:46:19.703Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p><code>★ Insight ─────────────────────────────────────</code>
+This is a great example of <strong>domain-driven discovery</strong> — before writing any code, we're using the organization's own TechDocs (hosted in Backstage) to understand the technology constraints imposed by each domain. This mirrors real enterprise architecture where different domains may have different tech mandates, and cross-domain services must reconcile those constraints.
+<code>─────────────────────────────────────────────────</code></p>
+<p>Let me start by querying TechDocs for available entities, then read both domain handbooks. I'll run the first command to list entities with TechDocs.</p></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T14-46-21-178Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T14-46-21-178Z" class="timestamp-link"><time datetime="2026-06-08T14:46:21.178Z" data-timestamp="2026-06-08T14:46:21.178Z">2026-06-08T14:46:21.178Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_013JujK2zsrwJHgJf8GfbiNU">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">List all entities with TechDocs available via backstage-cli</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute techdocs-mcp-extras:fetch-techdocs --backendUrl http://localhost:7007 2&gt;/dev/null | tail -100</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T14-46-23-773Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T14-46-23-773Z" class="timestamp-link"><time datetime="2026-06-08T14:46:23.773Z" data-timestamp="2026-06-08T14:46:23.773Z">2026-06-08T14:46:23.773Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>      }
+    },
+    {
+      &quot;name&quot;: &quot;customer-portal&quot;,
+      &quot;title&quot;: &quot;Customer Portal&quot;,
+      &quot;tags&quot;: &quot;&quot;,
+      &quot;description&quot;: &quot;Customer-facing digital channels including the self-service web portal,\niOS and Android mobile apps, and the broker/intermediary portal. Provides\npolicy management, claims tracking, and document access.\n&quot;,
+      &quot;owner&quot;: &quot;group:default/digital-channels-engineering&quot;,
+      &quot;lifecycle&quot;: &quot;&quot;,
+      &quot;namespace&quot;: &quot;default&quot;,
+      &quot;kind&quot;: &quot;Domain&quot;,
+      &quot;techDocsUrl&quot;: &quot;http://localhost:7007/docs/default/domain/customer-portal&quot;,
+      &quot;metadataUrl&quot;: &quot;http://localhost:7007/api/catalog/entities/by-name/domain/default/customer-portal&quot;
+    },
+    {
+      &quot;name&quot;: &quot;data-analytics&quot;,
+      &quot;title&quot;: &quot;Data &amp; Analytics&quot;,
+      &quot;tags&quot;: &quot;&quot;,
+      &quot;description&quot;: &quot;Enterprise data platform, actuarial modelling, machine learning pipelines,\nbusiness intelligence reporting, and data governance. Provides certified\ndata products to all business domains for decision support.\n&quot;,
+      &quot;owner&quot;: &quot;group:default/data-analytics-engineering&quot;,
+      &quot;lifecycle&quot;: &quot;&quot;,
+      &quot;namespace&quot;: &quot;default&quot;,
+      &quot;kind&quot;: &quot;Domain&quot;,
+      &quot;techDocsUrl&quot;: &quot;http://localhost:7007/docs/default/domain/data-analytics&quot;,
+      &quot;metadataUrl&quot;: &quot;http://localhost:7007/api/catalog/entities/by-name/domain/default/data-analytics&quot;
+    },
+    {
+      &quot;name&quot;: &quot;policy-administration&quot;,
+      &quot;title&quot;: &quot;Policy Administration&quot;,
+      &quot;tags&quot;: &quot;&quot;,
+      &quot;description&quot;: &quot;Core policy lifecycle management platform shared across all lines of\nbusiness. Handles policy inception, mid-term adjustments (endorsements),\nrenewals, lapses, cancellations, and reinstatements.\n&quot;,
+      &quot;owner&quot;: &quot;group:default/policy-platform-engineering&quot;,
+      &quot;lifecycle&quot;: &quot;&quot;,
+      &quot;namespace&quot;: &quot;default&quot;,
+      &quot;kind&quot;: &quot;Domain&quot;,
+      &quot;techDocsUrl&quot;: &quot;http://localhost:7007/docs/default/domain/policy-administration&quot;,
+      &quot;metadataUrl&quot;: &quot;http://localhost:7007/api/catalog/entities/by-name/domain/default/policy-administration&quot;
+    },
+    {
+      &quot;name&quot;: &quot;underwriting&quot;,
+      &quot;title&quot;: &quot;Underwriting&quot;,
+      &quot;tags&quot;: &quot;&quot;,
+      &quot;description&quot;: &quot;Risk assessment, pricing, and capacity management across all lines.\nIncludes quote and bind workflows, rating engines, exposure management,\nfacultative referrals, and automated underwriting decisioning.\n&quot;,
+      &quot;owner&quot;: &quot;group:default/underwriting-engineering&quot;,
+      &quot;lifecycle&quot;: &quot;&quot;,
+      &quot;namespace&quot;: &quot;default&quot;,
+      &quot;kind&quot;: &quot;Domain&quot;,
+      &quot;techDocsUrl&quot;: &quot;http://localhost:7007/docs/default/domain/underwriting&quot;,
+      &quot;metadataUrl&quot;: &quot;http://localhost:7007/api/catalog/entities/by-name/domain/default/underwriting&quot;
+    },
+    {
+      &quot;name&quot;: &quot;parasol-platform-engineering&quot;,
+      &quot;title&quot;: &quot;Parasol Platform Engineering&quot;,
+      &quot;tags&quot;: &quot;&quot;,
+      &quot;description&quot;: &quot;Owns shared infrastructure including identity and access management,\nAPI gateway, service mesh, observability stack, and the internal\ndeveloper platform. Serves all engineering teams as an internal platform.\n&quot;,
+      &quot;owner&quot;: &quot;&quot;,
+      &quot;lifecycle&quot;: &quot;&quot;,
+      &quot;namespace&quot;: &quot;default&quot;,
+      &quot;kind&quot;: &quot;Group&quot;,
+      &quot;techDocsUrl&quot;: &quot;http://localhost:7007/docs/default/group/parasol-platform-engineering&quot;,
+      &quot;metadataUrl&quot;: &quot;http://localhost:7007/api/catalog/entities/by-name/group/default/parasol-platform-engineering&quot;
+    },
+    {
+      &quot;name&quot;: &quot;data-lake-system&quot;,
+      &quot;title&quot;: &quot;Enterprise Data Lake System&quot;,
+      &quot;tags&quot;: &quot;&quot;,
+      &quot;description&quot;: &quot;Central data lake ingesting raw data from all operational systems into\na governed data platform. Provides certified data products and curated\ndatasets for analytics, actuarial, and regulatory consumption.\n&quot;,
+      &quot;owner&quot;: &quot;group:default/data-analytics-engineering&quot;,
+      &quot;lifecycle&quot;: &quot;&quot;,
+      &quot;namespace&quot;: &quot;default&quot;,
+      &quot;kind&quot;: &quot;System&quot;,
+      &quot;techDocsUrl&quot;: &quot;http://localhost:7007/docs/default/system/data-lake-system&quot;,
+      &quot;metadataUrl&quot;: &quot;http://localhost:7007/api/catalog/entities/by-name/system/default/data-lake-system&quot;
+    },
+    {
+      &quot;name&quot;: &quot;fnol-system&quot;,
+      &quot;title&quot;: &quot;FNOL System&quot;,
+      &quot;tags&quot;: &quot;&quot;,
+      &quot;description&quot;: &quot;First Notice of Loss intake and triage system. Accepts loss notifications\nfrom all channels (web, mobile, phone, third-party adjusters), validates\ncoverage, and routes claims to the appropriate assessment workflow.\n&quot;,
+      &quot;owner&quot;: &quot;group:default/claims-engineering&quot;,
+      &quot;lifecycle&quot;: &quot;&quot;,
+      &quot;namespace&quot;: &quot;default&quot;,
+      &quot;kind&quot;: &quot;System&quot;,
+      &quot;techDocsUrl&quot;: &quot;http://localhost:7007/docs/default/system/fnol-system&quot;,
+      &quot;metadataUrl&quot;: &quot;http://localhost:7007/api/catalog/entities/by-name/system/default/fnol-system&quot;
+    },
+    {
+      &quot;name&quot;: &quot;rating-engine-system&quot;,
+      &quot;title&quot;: &quot;Rating Engine System&quot;,
+      &quot;tags&quot;: &quot;&quot;,
+      &quot;description&quot;: &quot;Centralised actuarial rating engine that calculates premiums for all\nproducts using filed rate tables, relativities, and surcharges. Supports\nboth real-time API calls and batch re-rating of renewal books.\n&quot;,
+      &quot;owner&quot;: &quot;group:default/underwriting-engineering&quot;,
+      &quot;lifecycle&quot;: &quot;&quot;,
+      &quot;namespace&quot;: &quot;default&quot;,
+      &quot;kind&quot;: &quot;System&quot;,
+      &quot;techDocsUrl&quot;: &quot;http://localhost:7007/docs/default/system/rating-engine-system&quot;,
+      &quot;metadataUrl&quot;: &quot;http://localhost:7007/api/catalog/entities/by-name/system/default/rating-engine-system&quot;
+    }
+  ]
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T14-46-26-906Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T14-46-26-906Z" class="timestamp-link"><time datetime="2026-06-08T14:46:26.906Z" data-timestamp="2026-06-08T14:46:26.906Z">2026-06-08T14:46:26.906Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>Let me see the full output to find claims and billing-payments domains.</p></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T14-46-29-571Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T14-46-29-571Z" class="timestamp-link"><time datetime="2026-06-08T14:46:29.571Z" data-timestamp="2026-06-08T14:46:29.571Z">2026-06-08T14:46:29.571Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>I can see multiple domains with TechDocs — including Claims and Billing &amp; Payments. Let me now read both domain handbooks in parallel.</p></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T14-46-30-714Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T14-46-30-714Z" class="timestamp-link"><time datetime="2026-06-08T14:46:30.714Z" data-timestamp="2026-06-08T14:46:30.714Z">2026-06-08T14:46:30.714Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_01CnTrviXc75NCYjh5mXMSAJ">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">Read Claims domain TechDocs handbook</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute techdocs-mcp-extras:retrieve-techdocs-content --entityRef domain:default/claims --backendUrl http://localhost:7007 2&gt;/dev/null | tail -200</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message assistant" id="msg-2026-06-08T14-46-31-659Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T14-46-31-659Z" class="timestamp-link"><time datetime="2026-06-08T14:46:31.659Z" data-timestamp="2026-06-08T14:46:31.659Z">2026-06-08T14:46:31.659Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_vrtx_01PyQqDnm4K5rDP1HoVK5p6t">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">Read Billing &amp; Payments domain TechDocs handbook</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">NPM_CONFIG_LEGACY_PEER_DEPS=true npx @backstage/cli@0.36.2 actions execute techdocs-mcp-extras:retrieve-techdocs-content --entityRef domain:default/billing-payments --backendUrl http://localhost:7007 2&gt;/dev/null | tail -200</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T14-46-31-902Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T14-46-31-902Z" class="timestamp-link"><time datetime="2026-06-08T14:46:31.902Z" data-timestamp="2026-06-08T14:46:31.902Z">2026-06-08T14:46:31.902Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>{
+  &quot;entityRef&quot;: &quot;domain:default/claims&quot;,
+  &quot;name&quot;: &quot;claims&quot;,
+  &quot;title&quot;: &quot;Claims&quot;,
+  &quot;kind&quot;: &quot;domain&quot;,
+  &quot;namespace&quot;: &quot;default&quot;,
+  &quot;content&quot;: &quot;     Parasol Claims Domain Handbook    :root{--md-text-font:\&quot;Roboto\&quot;;--md-code-font:\&quot;Roboto Mono\&quot;} \\_\\_md\\_scope=new URL(\&quot;.\&quot;,location),\\_\\_md\\_hash=e=&gt;\\[...e\\].reduce(((e,\\_)=&gt;(e&lt;&lt;5)-e+\\_.charCodeAt(0)),0),\\_\\_md\\_get=(e,\\_=localStorage,t=\\_\\_md\\_scope)=&gt;JSON.parse(\\_.getItem(t.pathname+\&quot;.\&quot;+e)),\\_\\_md\\_set=(e,\\_,t=localStorage,a=\\_\\_md\\_scope)=&gt;{try{t.setItem(a.pathname+\&quot;.\&quot;+e,JSON.stringify(\\_))}catch(e){}}  \n\n[Skip to content](#claims-domain-handbook)\n\n[](. \&quot;Parasol Claims Domain Handbook\&quot;)\n\nParasol Claims Domain Handbook\n\nHome\n\n[\n\nGitHub\n\n](https://github.com/redhat-developer/rhdh-agentic/tree/main/catalog/techdocs/domains/claims \&quot;Go to repository\&quot;)\n\n[](. \&quot;Parasol Claims Domain Handbook\&quot;)Parasol Claims Domain Handbook\n\n[\n\nGitHub\n\n](https://github.com/redhat-developer/rhdh-agentic/tree/main/catalog/techdocs/domains/claims \&quot;Go to repository\&quot;)\n\n-    Home [Home](.)\n    \n    Table of contents\n    \n    -   [Approved Stack Matrix](#approved-stack-matrix)\n        \n        -   [ML/AI Stack (Fraud Detection)](#mlai-stack-fraud-detection)\n        \n    -   [Governance Rules](#governance-rules)\n        \n        -   [Mandatory](#mandatory)\n        -   [Requires Approval](#requires-approval)\n        -   [Forbidden](#forbidden)\n        \n    -   [Key Systems](#key-systems)\n    -   [When to Deviate](#when-to-deviate)\n    \n\nTable of contents\n\n-   [Approved Stack Matrix](#approved-stack-matrix)\n    \n    -   [ML/AI Stack (Fraud Detection)](#mlai-stack-fraud-detection)\n    \n-   [Governance Rules](#governance-rules)\n    \n    -   [Mandatory](#mandatory)\n    -   [Requires Approval](#requires-approval)\n    -   [Forbidden](#forbidden)\n    \n-   [Key Systems](#key-systems)\n-   [When to Deviate](#when-to-deviate)\n\n[](https://github.com/redhat-developer/rhdh-agentic/edit/main/catalog/techdocs/domains/claims/docs/index.md \&quot;Edit this page\&quot;)\n\n# Claims Domain Handbook[¶](#claims-domain-handbook \&quot;Permanent link\&quot;)\n\nThe Claims domain manages the full claims lifecycle across all lines of business: intake (FNOL), triage, adjuster assignment, damage estimation, reserve setting, fraud detection, settlement payment, subrogation recovery, and litigation management.\n\n**Owner**: `claims-engineering` (13 engineers) **Components**: 27 services across 6 systems **APIs**: 3 (FNOL Submission, Claims Status, Fraud Score)\n\n## Approved Stack Matrix[¶](#approved-stack-matrix \&quot;Permanent link\&quot;)\n\nTechnology\n\nStatus\n\nCount\n\nRationale\n\n**Java (Quarkus)**\n\nRequired\n\n17 components\n\nPrimary runtime for all transactional claims services. Quarkus preferred for new services; JBoss EAP acceptable for migration of existing services.\n\n**Python**\n\nAllowed\n\n7 components\n\nUsed for estimation, valuation, and ML workloads (fraud scoring, damage estimation, coverage verification). Allowed only for analytical or ML components.\n\n**Node.js**\n\nAllowed\n\n2 components\n\nUsed for notification services (claimant-notification-service) and real-time event consumers. Allowed for I/O-bound, non-transactional workloads only.\n\n**REST (OpenAPI 3.0.3)**\n\nRequired\n\n24 components\n\nDefault communication pattern. All synchronous service interfaces must use REST with OpenAPI specs following org-wide conventions.\n\n**SOAP/ACORD XML**\n\nRestricted\n\n1 component\n\nLegacy only (fnol-channel-adapter-service). No new SOAP interfaces. Existing ACORD integrations maintained for third-party adjuster compatibility.\n\n**OpenShift 4**\n\nRequired\n\nAll\n\nContainer orchestration platform. All claims services run on OpenShift.\n\n**AMQ Streams (Kafka)**\n\nPreferred\n\n—\n\nEvent-driven claim lifecycle events (FNOL created, status changed, payment approved). Use for all asynchronous domain events.\n\n**Apache Camel**\n\nPreferred\n\n—\n\nIntegration framework for channel adapters and external system connectors (ACORD, third-party adjusters).\n\n**Keycloak**\n\nRequired\n\n—\n\nAuthentication for adjusters, claimants, and SIU investigators. OIDC/OAuth2 flows.\n\n**Red Hat ACS**\n\nRequired\n\n—\n\nContainer security scanning. Mandatory for all images before production deployment.\n\n**Instana**\n\nRequired\n\n—\n\nAPM and distributed tracing. Claims services must meet p99 &lt; 500ms latency SLO.\n\n### ML/AI Stack (Fraud Detection)[¶](#mlai-stack-fraud-detection \&quot;Permanent link\&quot;)\n\nTechnology\n\nStatus\n\nRationale\n\n**watsonx.ai**\n\nPreferred\n\nModel training for fraud scoring and network graph analysis.\n\n**OpenShift AI**\n\nTrial\n\nModel serving infrastructure for real-time fraud scoring (fraud-score-service).\n\n**IBM Granite**\n\nTrial\n\nFoundation model for fraud text analysis (claim narrative screening).\n\n**watsonx.governance**\n\nRequired for ML\n\nBias detection and model drift monitoring for all ML models in production.\n\n## Governance Rules[¶](#governance-rules \&quot;Permanent link\&quot;)\n\n### Mandatory[¶](#mandatory \&quot;Permanent link\&quot;)\n\n-   All new claims services MUST be written in Java using Quarkus, unless the workload is analytical/ML (use Python) or I/O-bound notification delivery (Node.js allowed).\n-   All services MUST expose REST APIs documented with OpenAPI 3.0.3.\n-   All claim state transitions MUST emit Kafka events to the claims event topic.\n-   All services processing PII (claimant names, addresses, policy details) MUST register with the GDPR Compliance System and implement DSAR support.\n-   Fraud scoring models MUST be registered with watsonx.governance before production deployment.\n-   All services MUST meet the p99 &lt; 500ms latency SLO (customer-facing).\n\n### Requires Approval[¶](#requires-approval \&quot;Permanent link\&quot;)\n\n-   Using a database technology other than the domain&#x27;s standard PostgreSQL/Db2 stack.\n-   Introducing a new third-party integration (external adjuster, legal service provider).\n-   Deploying an ML model that makes automated claim decisions (fraud referral to SIU is allowed; automated denial is not without Claims Director approval).\n-   Adding a new ACORD message type to the channel adapter.\n\n### Forbidden[¶](#forbidden \&quot;Permanent link\&quot;)\n\n-   New SOAP interfaces. Use REST for all new integrations; wrap legacy SOAP endpoints in REST adapters if external systems require them.\n-   Storing unmasked PII in application logs.\n-   Direct database access from services outside the claims domain. Use the published APIs (FNOL Submission, Claims Status, Fraud Score).\n-   Running ML inference outside OpenShift AI / watsonx.ai managed infrastructure.\n\n## Key Systems[¶](#key-systems \&quot;Permanent link\&quot;)\n\nSystem\n\nPurpose\n\nComponents\n\n`fnol-system`\n\nFirst Notice of Loss intake and triage\n\nfnol-intake-service, fnol-triage-router, fnol-channel-adapter-service, coverage-verification-service, claimant-notification-service\n\n`claims-assessment-system`\n\nAdjuster assignment and damage estimation\n\nadjuster-assignment-service, damage-estimation-service, reserve-calculation-service, claims-decision-service, claim-status-tracker\n\n`claims-payment-system`\n\nSettlement and payment processing\n\nclaims-settlement-service, payment-disbursement-service, subrogation-recovery-service\n\n`claims-fraud-detection-system`\n\nML-based fraud scoring\n\nfraud-score-service, fraud-network-graph-service, siu-referral-service, fraud-rules-engine\n\n`claims-document-system`\n\nDocument management\n\nclaims-document-ingestion, document-classification-service, claims-archive-service\n\n`claims-litigation-system`\n\nLegal proceedings management\n\nlitigation-tracking-service, panel-solicitor-gateway (legacy SOAP), recovery-accounting-service\n\n## When to Deviate[¶](#when-to-deviate \&quot;Permanent link\&quot;)\n\nIf you need to use a technology not listed above:\n\n1.  **Document the need** in a system ADR explaining why the approved stack does not meet the requirement.\n2.  **Get approval** from the Claims Engineering tech lead and Platform Engineering.\n3.  **Assess security impact** — any new runtime or framework must pass ACS scanning and Instana instrumentation requirements.\n4.  **Time-box the exception** — deviations are granted for a specific use case, not as blanket approvals. Re-evaluate at the next quarterly architecture review.\n\nExceptions granted in the past:\n\n-   Graph database (Neo4j) for fraud-network-graph-service — approved because relational databases cannot efficiently traverse the multi-hop fraud networks required for SIU investigations.\n-   ACORD XML in fnol-channel-adapter-service — maintained for backward compatibility with third-party loss adjusters who cannot migrate to REST.\n\nvar target=document.getElementById(location.hash.slice(1));target&amp;&amp;target.name&amp;&amp;(target.checked=target.name.startsWith(\&quot;\\_\\_tabbed\\_\&quot;))\n\nMade with [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/)\n\n{\&quot;annotate\&quot;: null, \&quot;base\&quot;: \&quot;.\&quot;, \&quot;features\&quot;: \\[\&quot;navigation.footer\&quot;, \&quot;content.action.edit\&quot;\\], \&quot;search\&quot;: \&quot;assets/javascripts/workers/search.2c215733.min.js\&quot;, \&quot;tags\&quot;: null, \&quot;translations\&quot;: {\&quot;clipboard.copied\&quot;: \&quot;Copied to clipboard\&quot;, \&quot;clipboard.copy\&quot;: \&quot;Copy to clipboard\&quot;, \&quot;search.result.more.one\&quot;: \&quot;1 more on this page\&quot;, \&quot;search.result.more.other\&quot;: \&quot;# more on this page\&quot;, \&quot;search.result.none\&quot;: \&quot;No matching documents\&quot;, \&quot;search.result.one\&quot;: \&quot;1 matching document\&quot;, \&quot;search.result.other\&quot;: \&quot;# matching documents\&quot;, \&quot;search.result.placeholder\&quot;: \&quot;Type to start searching\&quot;, \&quot;search.result.term.missing\&quot;: \&quot;Missing\&quot;, \&quot;select.version\&quot;: \&quot;Select version\&quot;}, \&quot;version\&quot;: null}&quot;,
+  &quot;pageTitle&quot;: &quot;Parasol Claims Domain Handbook&quot;,
+  &quot;path&quot;: &quot;index.html&quot;,
+  &quot;contentType&quot;: &quot;text&quot;,
+  &quot;lastModified&quot;: &quot;+058405-05-28T18:13:18.000Z&quot;,
+  &quot;metadata&quot;: {
+    &quot;lastUpdated&quot;: &quot;+058405-05-28T18:13:18.000Z&quot;,
+    &quot;buildTimestamp&quot;: 1780929396798,
+    &quot;siteName&quot;: &quot;Parasol Claims Domain Handbook&quot;,
+    &quot;siteDescription&quot;: &quot;Approved stack, governance rules, and architectural guidance for the Claims domain&quot;
+  }
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message tool-reply" id="msg-2026-06-08T14-46-33-205Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-06-08T14-46-33-205Z" class="timestamp-link"><time datetime="2026-06-08T14:46:33.205Z" data-timestamp="2026-06-08T14:46:33.205Z">2026-06-08T14:46:33.205Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>{
+  &quot;entityRef&quot;: &quot;domain:default/billing-payments&quot;,
+  &quot;name&quot;: &quot;billing-payments&quot;,
+  &quot;title&quot;: &quot;Billing &amp; Payments&quot;,
+  &quot;kind&quot;: &quot;domain&quot;,
+  &quot;namespace&quot;: &quot;default&quot;,
+  &quot;content&quot;: &quot;     Parasol Billing Payments Domain Handbook    :root{--md-text-font:\&quot;Roboto\&quot;;--md-code-font:\&quot;Roboto Mono\&quot;} \\_\\_md\\_scope=new URL(\&quot;.\&quot;,location),\\_\\_md\\_hash=e=&gt;\\[...e\\].reduce(((e,\\_)=&gt;(e&lt;&lt;5)-e+\\_.charCodeAt(0)),0),\\_\\_md\\_get=(e,\\_=localStorage,t=\\_\\_md\\_scope)=&gt;JSON.parse(\\_.getItem(t.pathname+\&quot;.\&quot;+e)),\\_\\_md\\_set=(e,\\_,t=localStorage,a=\\_\\_md\\_scope)=&gt;{try{t.setItem(a.pathname+\&quot;.\&quot;+e,JSON.stringify(\\_))}catch(e){}}  \n\n[Skip to content](#billing-payments-domain-handbook)\n\n[](. \&quot;Parasol Billing Payments Domain Handbook\&quot;)\n\nParasol Billing Payments Domain Handbook\n\nHome\n\n[\n\nGitHub\n\n](https://github.com/redhat-developer/rhdh-agentic/tree/main/catalog/techdocs/domains/billing-payments \&quot;Go to repository\&quot;)\n\n[](. \&quot;Parasol Billing Payments Domain Handbook\&quot;)Parasol Billing Payments Domain Handbook\n\n[\n\nGitHub\n\n](https://github.com/redhat-developer/rhdh-agentic/tree/main/catalog/techdocs/domains/billing-payments \&quot;Go to repository\&quot;)\n\n-    Home [Home](.)\n    \n    Table of contents\n    \n    -   [Domain Overview](#domain-overview)\n        \n        -   [Published APIs](#published-apis)\n        -   [Notable Tags](#notable-tags)\n        -   [Compliance Requirements](#compliance-requirements)\n        \n    -   [Approved Stack Matrix](#approved-stack-matrix)\n        \n        -   [Tech Radar Summary](#tech-radar-summary)\n        \n    -   [Governance Rules](#governance-rules)\n        \n        -   [Mandatory](#mandatory)\n        -   [Requires Approval](#requires-approval)\n        -   [Forbidden](#forbidden)\n        \n    -   [When to Deviate](#when-to-deviate)\n        \n        -   [Exception Process](#exception-process)\n        -   [Common Valid Exceptions](#common-valid-exceptions)\n        -   [Questions](#questions)\n        \n    \n\nTable of contents\n\n-   [Domain Overview](#domain-overview)\n    \n    -   [Published APIs](#published-apis)\n    -   [Notable Tags](#notable-tags)\n    -   [Compliance Requirements](#compliance-requirements)\n    \n-   [Approved Stack Matrix](#approved-stack-matrix)\n    \n    -   [Tech Radar Summary](#tech-radar-summary)\n    \n-   [Governance Rules](#governance-rules)\n    \n    -   [Mandatory](#mandatory)\n    -   [Requires Approval](#requires-approval)\n    -   [Forbidden](#forbidden)\n    \n-   [When to Deviate](#when-to-deviate)\n    \n    -   [Exception Process](#exception-process)\n    -   [Common Valid Exceptions](#common-valid-exceptions)\n    -   [Questions](#questions)\n    \n\n[](https://github.com/redhat-developer/rhdh-agentic/edit/main/catalog/techdocs/domains/billing-payments/docs/index.md \&quot;Edit this page\&quot;)\n\n# Billing &amp; Payments Domain Handbook[¶](#billing-payments-domain-handbook \&quot;Permanent link\&quot;)\n\nDomain handbook for the Billing &amp; Payments domain at Parasol Insurance Group. Owner: `billing-payments-engineering`.\n\n## Domain Overview[¶](#domain-overview \&quot;Permanent link\&quot;)\n\nThe Billing &amp; Payments domain contains **14 components** across 4 systems:\n\nSystem\n\nPurpose\n\n`premium-collection-system`\n\nScheduled premium collection, direct debit mandates, payment retry logic\n\n`payment-processing-system`\n\nReal-time payment authorization, PCI-DSS cardholder data handling\n\n`refunds-adjustments-system`\n\nRefund processing, premium adjustments, credit note generation\n\n`billing-account-system`\n\nBilling account lifecycle, ledger management, statement generation\n\n**Language breakdown:** Java (13), Python (1). **API style:** REST (all 14 components).\n\n### Published APIs[¶](#published-apis \&quot;Permanent link\&quot;)\n\nAPI\n\nVersion\n\nVisibility\n\nTags\n\nDescription\n\nPremium Payment API\n\nv2\n\nPublic\n\n`pci-dss`\n\nPayment submission, status inquiry, refund initiation\n\n### Notable Tags[¶](#notable-tags \&quot;Permanent link\&quot;)\n\n`ledger`, `open-banking`, `direct-debit`, `reconciliation`, `pci-dss`.\n\n### Compliance Requirements[¶](#compliance-requirements \&quot;Permanent link\&quot;)\n\n**PCI-DSS Level 1** compliance is mandatory for all components in `payment-processing-system` and any component that handles, transmits, or stores cardholder data. This is the highest PCI compliance level and requires annual on-site audit.\n\n* * *\n\n## Approved Stack Matrix[¶](#approved-stack-matrix \&quot;Permanent link\&quot;)\n\nTechnology\n\nStatus\n\nCount\n\nRationale\n\n**Quarkus**\n\nPreferred\n\nNew Java services\n\nDefault framework for all new services. Fast startup, low memory footprint on OpenShift.\n\n**JBoss EAP**\n\nAllowed\n\nLegacy services\n\nExisting EAP workloads may remain. New services must use Quarkus.\n\n**Python**\n\nRestricted\n\n1 component\n\nLimited to reconciliation batch jobs. Not permitted for payment-path services.\n\n**OpenShift 4**\n\nRequired\n\nAll\n\nEvery component must deploy to OpenShift 4.\n\n**IBM MQ**\n\nRequired\n\nPayment flows\n\nGuaranteed-delivery messaging for all payment transactions. Ensures no payment message is lost.\n\n**Keycloak**\n\nRequired\n\nAll public-facing\n\nOAuth 2.0 / OIDC for Premium Payment API and internal service auth.\n\n**ACS (Advanced Cluster Security)**\n\nRequired\n\nAll\n\nRuntime security scanning, vulnerability detection, and compliance enforcement.\n\n**Guardium**\n\nRequired\n\nPCI-DSS scope\n\nDatabase activity monitoring for all datastores in PCI-DSS scope. Required for audit trail.\n\n**Instana**\n\nRequired\n\nAll\n\nAPM, distributed tracing, and real-time alerting. PCI-DSS requires full transaction traceability.\n\n### Tech Radar Summary[¶](#tech-radar-summary \&quot;Permanent link\&quot;)\n\n-   **ADOPT:** Quarkus, JBoss EAP, OpenShift 4, IBM MQ, Keycloak, ACS, Guardium, Instana\n\n* * *\n\n## Governance Rules[¶](#governance-rules \&quot;Permanent link\&quot;)\n\n### Mandatory[¶](#mandatory \&quot;Permanent link\&quot;)\n\n1.  All new services **MUST** use **Quarkus**. Python is restricted to non-payment batch workloads only.\n2.  All services **MUST** deploy to **OpenShift 4** using Parasol Helm charts with PCI-hardened base images.\n3.  All payment transaction messaging **MUST** use **IBM MQ** with guaranteed delivery. AMQ Streams (Kafka) is not approved for payment-critical paths due to at-least-once semantics.\n4.  All public APIs **MUST** authenticate via **Keycloak** (OAuth 2.0 / OIDC).\n5.  All components in PCI-DSS scope **MUST** have **Guardium** database activity monitoring enabled.\n6.  All components **MUST** have **ACS** runtime policies active. No container may run without ACS enforcement.\n7.  All components **MUST** emit distributed traces to **Instana**. Trace context propagation is mandatory across all service boundaries.\n8.  Components tagged `pci-dss` **MUST NOT** log, cache, or persist cardholder data (PAN, CVV, expiry) in plaintext. Tokenization is required before any storage.\n9.  Components tagged `ledger` **MUST** implement double-entry accounting with immutable audit logs.\n10.  Components tagged `direct-debit` **MUST** implement retry logic with configurable backoff and dead-letter queue processing via IBM MQ.\n\n### Requires Approval[¶](#requires-approval \&quot;Permanent link\&quot;)\n\n-   Introducing any new datastore (requires `billing-payments-engineering` lead + Data Governance + PCI QSA review).\n-   Using AMQ Streams (Kafka) for any messaging within this domain (must demonstrate the flow is not payment-critical).\n-   Any change to the Premium Payment API contract (requires `billing-payments-engineering` lead + API governance review).\n-   Using Python for any new component (must justify why Java/Quarkus is insufficient).\n-   Storing any data outside the EU (data residency requirement for payment data).\n\n### Forbidden[¶](#forbidden \&quot;Permanent link\&quot;)\n\n-   Running services outside OpenShift 4.\n-   Using an unapproved message broker for payment transactions (IBM MQ only).\n-   Logging or caching cardholder data in plaintext.\n-   Disabling ACS or Guardium on any component.\n-   Using non-tokenized PAN in any inter-service communication.\n-   Deploying components without Instana instrumentation.\n\n* * *\n\n## When to Deviate[¶](#when-to-deviate \&quot;Permanent link\&quot;)\n\nDeviations in the Billing &amp; Payments domain carry elevated risk due to PCI-DSS compliance obligations. The exception process is stricter than other domains.\n\n### Exception Process[¶](#exception-process \&quot;Permanent link\&quot;)\n\n1.  **Raise** an exception request in `#billing-payments-engineering` Slack channel with:\n    -   The governance rule being deviated from.\n    -   The technical justification.\n    -   The PCI-DSS impact assessment (if the deviation affects components in PCI scope).\n    -   The proposed alternative and its trade-offs.\n    -   The expected duration (permanent or time-boxed).\n2.  **Review** by:\n    -   `billing-payments-engineering` lead (required).\n    -   `parasol-platform-engineering` member (required).\n    -   PCI Qualified Security Assessor (required if deviation affects PCI-DSS scope).\n3.  **Record** the approved exception as an ADR in the affected component&#x27;s `docs/adrs/` directory.\n4.  **Tag** the component with `governance-exception` in the Backstage catalog.\n5.  **Re-validate** the exception at every PCI-DSS audit cycle (annual).\n\n### Common Valid Exceptions[¶](#common-valid-exceptions \&quot;Permanent link\&quot;)\n\n-   **Open Banking integrations:** Third-party open-banking APIs may require non-standard authentication flows. These must be approved by the PCI QSA and documented in an ADR.\n-   **Reconciliation batch jobs:** Python-based reconciliation jobs that do not handle cardholder data may use relaxed messaging requirements (AMQ Streams instead of IBM MQ) with approval.\n-   **Vendor payment gateways:** If a payment gateway vendor requires a specific SDK or protocol (e.g., ISO 8583), the integration service may use non-standard technologies with full security review.\n\n### Questions[¶](#questions \&quot;Permanent link\&quot;)\n\nContact `billing-payments-engineering` via the internal developer portal or `#billing-payments-engineering` Slack channel. For PCI-DSS-specific questions, contact `parasol-security-engineering`.\n\nvar target=document.getElementById(location.hash.slice(1));target&amp;&amp;target.name&amp;&amp;(target.checked=target.name.startsWith(\&quot;\\_\\_tabbed\\_\&quot;))\n\nMade with [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/)\n\n{\&quot;annotate\&quot;: null, \&quot;base\&quot;: \&quot;.\&quot;, \&quot;features\&quot;: \\[\&quot;navigation.footer\&quot;, \&quot;content.action.edit\&quot;\\], \&quot;search\&quot;: \&quot;assets/javascripts/workers/search.2c215733.min.js\&quot;, \&quot;tags\&quot;: null, \&quot;translations\&quot;: {\&quot;clipboard.copied\&quot;: \&quot;Copied to clipboard\&quot;, \&quot;clipboard.copy\&quot;: \&quot;Copy to clipboard\&quot;, \&quot;search.result.more.one\&quot;: \&quot;1 more on this page\&quot;, \&quot;search.result.more.other\&quot;: \&quot;# more on this page\&quot;, \&quot;search.result.none\&quot;: \&quot;No matching documents\&quot;, \&quot;search.result.one\&quot;: \&quot;1 matching document\&quot;, \&quot;search.result.other\&quot;: \&quot;# matching documents\&quot;, \&quot;search.result.placeholder\&quot;: \&quot;Type to start searching\&quot;, \&quot;search.result.term.missing\&quot;: \&quot;Missing\&quot;, \&quot;select.version\&quot;: \&quot;Select version\&quot;}, \&quot;version\&quot;: null}&quot;,
+  &quot;pageTitle&quot;: &quot;Parasol Billing Payments Domain Handbook&quot;,
+  &quot;path&quot;: &quot;index.html&quot;,
+  &quot;contentType&quot;: &quot;text&quot;,
+  &quot;lastModified&quot;: &quot;+058405-05-28T20:33:18.000Z&quot;,
+  &quot;metadata&quot;: {
+    &quot;lastUpdated&quot;: &quot;+058405-05-28T20:33:18.000Z&quot;,
+    &quot;buildTimestamp&quot;: 1780929405198,
+    &quot;siteName&quot;: &quot;Parasol Billing Payments Domain Handbook&quot;,
+    &quot;siteDescription&quot;: &quot;Approved stack, governance rules, and architectural guidance for the Billing Payments domain&quot;
+  }
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T14-46-47-242Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T14-46-47-242Z" class="timestamp-link"><time datetime="2026-06-08T14:46:47.242Z" data-timestamp="2026-06-08T14:46:47.242Z">2026-06-08T14:46:47.242Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>Excellent! I now have both domain handbooks. Let me analyze them carefully and extract the key findings, especially the messaging conflict between Claims (Kafka preferred) and Billing &amp; Payments (IBM MQ required).</p>
+<p>Let me summarize my findings:</p>
+<p><strong>Claims Domain:</strong>
+- Java (Quarkus) required for transactional services
+- REST (OpenAPI 3.0.3) required
+- AMQ Streams (Kafka) preferred for async events
+- OpenShift 4 required
+- Keycloak required
+- ACS required
+- Instana required
+- PostgreSQL/Db2 standard databases
+- GDPR compliance for PII</p>
+<ul>
+<li>p99 latency under 500ms</li>
+</ul>
+<p><strong>Billing &amp; Payments Domain:</strong>
+- Quarkus preferred for new services
+- OpenShift 4 required
+- IBM MQ is mandatory for payment flows due to guaranteed delivery requirements, while Kafka is explicitly prohibited for payment-critical paths
+- PCI-DSS Level 1 compliance with Guardium required
+- Keycloak, ACS, and Instana required
+- Double-entry accounting with immutable audit logs for ledger components
+- EU data residency for payment data</p>
+<p>This reveals a fundamental architectural tension: Claims wants to standardize on Kafka for async messaging, but Billing &amp; Payments explicitly requires IBM MQ for payment flows and forbids Kafka in those contexts.</p>
+<p>Since the reconciliation service bridges both domains—it consumes claim events from Kafka while handling payment transactions that must go through IBM MQ—it needs to operate as a dual-broker system, pulling from Kafka for claim lifecycle events while simultaneously managing payment messaging through IBM MQ.</p></div></div></div>
+<div class="message assistant" id="msg-2026-06-08T14-47-20-365Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-06-08T14-47-20-365Z" class="timestamp-link"><time datetime="2026-06-08T14:47:20.365Z" data-timestamp="2026-06-08T14:47:20.365Z">2026-06-08T14:47:20.365Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>Both handbooks are loaded. I've found the critical architectural constraint. Let me lay out the complete analysis.</p>
+<hr />
+<h2>Technology Decision Matrix: Claims Payment Reconciliation Service</h2>
+<h3>1. Stack Requirements (Both Domains Agree)</h3>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Requirement</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Language</strong></td>
+<td>Java (Quarkus)</td>
+<td>Both domains mandate Quarkus for new transactional services</td>
+</tr>
+<tr>
+<td><strong>Platform</strong></td>
+<td>OpenShift 4</td>
+<td>Both domains: required for all components</td>
+</tr>
+<tr>
+<td><strong>API Style</strong></td>
+<td>REST + OpenAPI 3.0.3</td>
+<td>Claims: required; Billing: all 14 components use REST</td>
+</tr>
+<tr>
+<td><strong>Auth</strong></td>
+<td>Keycloak (OAuth 2.0 / OIDC)</td>
+<td>Both domains: required</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td>Red Hat ACS</td>
+<td>Both domains: required, no exceptions</td>
+</tr>
+<tr>
+<td><strong>Observability</strong></td>
+<td>Instana APM + distributed tracing</td>
+<td>Both domains: required; Claims mandates p99 &lt; 500ms</td>
+</tr>
+<tr>
+<td><strong>Latency SLO</strong></td>
+<td>p99 &lt; 500ms (customer-facing)</td>
+<td>Claims domain governance</td>
+</tr>
+</tbody>
+</table>
+<h3>2. The Critical Conflict: Messaging</h3>
+<p>This is the <strong>aha moment</strong> — the two domains have directly contradictory messaging mandates:</p>
+<table>
+<thead>
+<tr>
+<th>Domain</th>
+<th>Messaging Rule</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Claims</strong></td>
+<td>AMQ Streams (Kafka) <strong>preferred</strong> for all async domain events</td>
+<td>Claim lifecycle events (FNOL created, status changed, <strong>payment approved</strong>) must flow through Kafka</td>
+</tr>
+<tr>
+<td><strong>Billing &amp; Payments</strong></td>
+<td>IBM MQ <strong>required</strong> for all payment transaction messaging</td>
+<td>Guaranteed exactly-once delivery for financial transactions. Kafka's at-least-once semantics are explicitly called out as insufficient</td>
+</tr>
+</tbody>
+</table>
+<p>Our reconciliation service sits at the <strong>intersection</strong> of both domains:
+- It <strong>consumes</strong> claim settlement events (originating from Claims → Kafka)
+- It <strong>processes</strong> payment transactions (governed by Billing → IBM MQ)</p>
+<p><strong>Resolution: Dual-broker architecture.</strong> The service must bridge both messaging systems:
+1. <strong>Consume</strong> claim lifecycle events from <strong>AMQ Streams (Kafka)</strong> — this is where Claims publishes "payment approved" events
+2. <strong>Produce/consume</strong> payment transaction messages on <strong>IBM MQ</strong> — this is the Billing-mandated path for actual money movement
+3. The reconciliation logic compares records from both streams to detect mismatches</p>
+<h3>3. Compliance Constraints</h3>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Impact on Design</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PCI-DSS Level 1</strong></td>
+<td>If our service touches cardholder data: Guardium DB monitoring, tokenized PAN only, no plaintext logging. Annual on-site audit scope.</td>
+</tr>
+<tr>
+<td><strong>GDPR / DSAR</strong></td>
+<td>Claims domain requires registration with GDPR Compliance System for any PII processing (claimant names, addresses)</td>
+</tr>
+<tr>
+<td><strong>Double-entry accounting</strong></td>
+<td>Billing <code>ledger</code>-tagged components must implement double-entry with immutable audit logs</td>
+</tr>
+<tr>
+<td><strong>EU data residency</strong></td>
+<td>Payment data must not be stored outside the EU</td>
+</tr>
+<tr>
+<td><strong>Fraud model governance</strong></td>
+<td>If reconciliation feeds fraud detection, any ML models need watsonx.governance registration</td>
+</tr>
+</tbody>
+</table>
+<h3>4. Cross-Domain Design Constraints</h3>
+<ul>
+<li><strong>No direct DB access</strong> across domain boundaries — Claims forbids external services from accessing its databases. We must use published APIs (FNOL Submission, Claims Status, Fraud Score) or Kafka events.</li>
+<li><strong>Dead-letter queue processing</strong> — Billing requires IBM MQ DLQ with configurable backoff for retry logic on payment-path components.</li>
+<li><strong>Exception process</strong> — Using Kafka for <em>any</em> messaging within the Billing domain requires explicit approval demonstrating the flow is non-payment-critical. Our reconciliation <em>reporting</em> channel could potentially use Kafka, but the payment reconciliation path itself cannot.</li>
+</ul>
+<h3>5. Technology Decision Summary</h3>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│         CLAIMS-PAYMENT RECONCILIATION SERVICE           │
+├─────────────────────────────────────────────────────────┤
+│  Runtime:        Java 21 + Quarkus                      │
+│  Platform:       OpenShift 4                            │
+│  API:            REST / OpenAPI 3.0.3                   │
+│  Auth:           Keycloak (OIDC)                        │
+│  Messaging IN:   AMQ Streams (Kafka) ← claim events    │
+│  Messaging OUT:  IBM MQ → payment transactions          │
+│  Database:       PostgreSQL (standard for both domains) │
+│  Observability:  Instana (traces + APM)                 │
+│  Security:       ACS scanning + Guardium (if PCI scope) │
+│  Compliance:     PCI-DSS L1, GDPR/DSAR, EU residency   │
+├─────────────────────────────────────────────────────────┤
+│  CRITICAL: Dual-broker design required — Kafka for      │
+│  claim events, IBM MQ for payment path. This is NOT     │
+│  optional; it's a governance mandate from both domains. │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<p><code>★ Insight ─────────────────────────────────────</code>
+<strong>Why this matters for agentic workflows</strong>: An AI agent that just picked <em>one</em> messaging system would violate one domain's governance rules. The TechDocs handbooks encode organizational knowledge that prevents exactly this kind of mistake. This is why "reading the docs first" isn't optional — in an enterprise, the technology choice isn't just about what works technically, it's about what's <em>allowed</em>. The dual-broker pattern (Kafka + IBM MQ) is the only design that satisfies both domains' mandatory rules simultaneously.</p>
+<p><strong>The broader pattern</strong>: Cross-domain services are where governance conflicts surface. Each domain optimizes for its own concerns (Claims for event-driven flexibility, Billing for guaranteed delivery and PCI compliance). The reconciliation service must honor both, which is why it's architecturally more complex than a single-domain service.
+<code>─────────────────────────────────────────────────</code></p>
+<p>The next step would be to use this decision matrix to scaffold the actual service — choosing a Backstage software template that supports Quarkus + dual messaging, or creating one if none exists.</p></div></div></div>
+        
+
+<div class="pagination"><a href="index.html" class="index-link">Index</a></div>
+
+    </div>
+    <script>
+document.querySelectorAll('time[data-timestamp]').forEach(function(el) {
+    const timestamp = el.getAttribute('data-timestamp');
+    const date = new Date(timestamp);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    const timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    if (isToday) { el.textContent = timeStr; }
+    else { el.textContent = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + timeStr; }
+});
+document.querySelectorAll('pre.json').forEach(function(el) {
+    let text = el.textContent;
+    text = text.replace(/"([^"]+)":/g, '<span style="color: #ce93d8">"$1"</span>:');
+    text = text.replace(/: "([^"]*)"/g, ': <span style="color: #81d4fa">"$1"</span>');
+    text = text.replace(/: (\d+)/g, ': <span style="color: #ffcc80">$1</span>');
+    text = text.replace(/: (true|false|null)/g, ': <span style="color: #f48fb1">$1</span>');
+    el.innerHTML = text;
+});
+document.querySelectorAll('.truncatable').forEach(function(wrapper) {
+    const content = wrapper.querySelector('.truncatable-content');
+    const btn = wrapper.querySelector('.expand-btn');
+    if (content.scrollHeight > 250) {
+        wrapper.classList.add('truncated');
+        btn.addEventListener('click', function() {
+            if (wrapper.classList.contains('truncated')) { wrapper.classList.remove('truncated'); wrapper.classList.add('expanded'); btn.textContent = 'Show less'; }
+            else { wrapper.classList.remove('expanded'); wrapper.classList.add('truncated'); btn.textContent = 'Show more'; }
+        });
+    }
+});
+</script>
+</body>
+</html>
